@@ -1,7 +1,7 @@
 //! Conversions from &OsStr
 
 use std::borrow::Cow;
-use std::ffi::{CStr, CString, OsStr};
+use std::ffi::{CStr, CString, OsStr, OsString};
 use std::ffi::{FromBytesWithNulError, NulError};
 use std::path::{Path, PathBuf};
 
@@ -40,6 +40,10 @@ pub fn os_str_to_path(input: &OsStr) -> &Path {
 
 pub fn os_str_to_path_buf(input: &OsStr) -> PathBuf {
     PathBuf::from(input)
+}
+
+pub fn os_str_to_os_string(input: &OsStr) -> OsString {
+    input.to_os_string()
 }
 
 // This conversion is only allowed on Unix.
