@@ -30,7 +30,7 @@ pub fn str_to_path(input: &str) -> &Path {
 }
 
 pub fn str_to_path_buf(input: &str) -> PathBuf {
-    Path::new(input).to_path_buf()
+    PathBuf::from(input)
 }
 
 pub fn str_to_os_str(input: &str) -> &OsStr {
@@ -38,7 +38,7 @@ pub fn str_to_os_str(input: &str) -> &OsStr {
 }
 
 pub fn str_to_os_string(input: &str) -> OsString {
-    OsStr::new(input).to_os_string()
+    OsString::from(input)
 }
 
 // A FromBytesWithNulError will be returned if the input is not
@@ -118,28 +118,25 @@ pub fn u8_array_to_string_lossy(input: &[u8]) -> Cow<str> {
     String::from_utf8_lossy(input)
 }
 
-// A direct conversion from bytes to a `Path` is only allowed on Unix.
+// This conversion is only allowed on Unix.
 pub fn u8_array_to_path_unix(input: &[u8]) -> &Path {
     use std::os::unix::ffi::OsStrExt;
     Path::new(OsStr::from_bytes(input))
 }
 
-// A direct conversion from bytes to a `PathBuf` is only allowed on
-// Unix.
+// This conversion is only allowed on Unix.
 pub fn u8_array_to_path_buf_unix(input: &[u8]) -> PathBuf {
     use std::os::unix::ffi::OsStrExt;
     PathBuf::from(OsStr::from_bytes(input))
 }
 
-// A direct conversion from bytes to an `&OsStr` is only allowed on
-// Unix.
+// This conversion is only allowed on Unix.
 pub fn u8_array_to_os_str_unix(input: &[u8]) -> &OsStr {
     use std::os::unix::ffi::OsStrExt;
     OsStr::from_bytes(input)
 }
 
-// A direct conversion from bytes to an `OsString` is only allowed on
-// Unix.
+// This conversion is only allowed on Unix.
 pub fn u8_array_to_os_string_unix(input: &[u8]) -> OsString {
     use std::os::unix::ffi::OsStringExt;
     OsString::from_vec(input.to_vec())
@@ -169,29 +166,97 @@ pub fn u8_vec_to_string(input: Vec<u8>) -> Result<String, FromUtf8Error> {
     String::from_utf8(input)
 }
 
-// A direct conversion from bytes to a `Path` is only allowed on Unix.
+// This conversion is only allowed on Unix.
 pub fn u8_vec_to_path_unix(input: &Vec<u8>) -> &Path {
     use std::os::unix::ffi::OsStrExt;
     Path::new(OsStr::from_bytes(input))
 }
 
-// A direct conversion from bytes to a `PathBuf` is only allowed on
-// Unix.
+// This conversion is only allowed on Unix.
 pub fn u8_vec_to_path_buf_unix(input: Vec<u8>) -> PathBuf {
     use std::os::unix::ffi::OsStringExt;
     PathBuf::from(OsString::from_vec(input))
 }
 
-// A direct conversion from bytes to an `OsStr` is only allowed on
-// Unix.
+// This conversion is only allowed on Unix.
 pub fn u8_vec_to_os_str_unix(input: &Vec<u8>) -> &OsStr {
     use std::os::unix::ffi::OsStrExt;
     OsStr::from_bytes(input)
 }
 
-// A direct conversion from bytes to an `OsString` is only allowed on
-// Unix.
+// This conversion is only allowed on Unix.
 pub fn u8_vec_to_os_string_unix(input: Vec<u8>) -> OsString {
     use std::os::unix::ffi::OsStringExt;
     OsString::from_vec(input)
 }
+
+// TODO: Path
+
+// TODO: PathBuf
+
+// --- Convert from &OsStr ---
+
+// None will be returned if the input is not valid UTF-8.
+pub fn os_str_to_str(input: &OsStr) -> Option<&str> {
+    input.to_str()
+}
+
+// None will be returned if the input is not valid UTF-8.
+pub fn os_str_to_string(input: &OsStr) -> Option<String> {
+    input.to_str().map(|s| s.to_string())
+}
+
+// This never fails, but invalid UTF-8 sequences will be replaced with
+// "�". This returns a `Cow<str>`; call `to_string()` to convert it to
+// a `String`.
+pub fn os_str_to_string_lossy(input: &OsStr) -> Cow<str> {
+    input.to_string_lossy()
+}
+
+// This conversion is only allowed on Unix.
+pub fn os_str_to_u8_array_unix(input: &OsStr) -> &[u8] {
+    use std::os::unix::ffi::OsStrExt;
+    input.as_bytes()
+}
+
+// This conversion is only allowed on Unix.
+pub fn os_str_to_u8_vec_unix(input: &OsStr) -> Vec<u8> {
+    use std::os::unix::ffi::OsStrExt;
+    input.as_bytes().to_vec()
+}
+
+pub fn os_str_to_path(input: &OsStr) -> &Path {
+    Path::new(input)
+}
+
+pub fn os_str_to_path_buf(input: &OsStr) -> PathBuf {
+    PathBuf::from(input)
+}
+
+// This conversion is only allowed on Unix.
+//
+// A FromBytesWithNulError will be returned if the input is not
+// nul-terminated or contains any interior nul bytes.
+//
+// If your input is not nul-terminated then a conversion without
+// allocation is not possible, so consider using `os_str_to_cstring`.
+pub fn os_str_to_cstr_unix(
+    input: &OsStr,
+) -> Result<&CStr, FromBytesWithNulError> {
+    use std::os::unix::ffi::OsStrExt;
+    CStr::from_bytes_with_nul(input.as_bytes())
+}
+
+// This conversion is only allowed on Unix.
+//
+// A NulError will be returned if the input contains any nul bytes.
+pub fn os_str_to_cstring_unix(input: &OsStr) -> Result<CString, NulError> {
+    use std::os::unix::ffi::OsStrExt;
+    CString::new(input.as_bytes())
+}
+
+// TODO: OsString
+
+// TODO: CStr
+
+// TODO: CString
