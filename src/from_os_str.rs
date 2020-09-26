@@ -23,7 +23,7 @@ pub fn os_str_to_string_lossy(input: &OsStr) -> Cow<str> {
 }
 
 // This conversion is only allowed on Unix.
-pub fn os_str_to_u8_array_unix(input: &OsStr) -> &[u8] {
+pub fn os_str_to_u8_slice_unix(input: &OsStr) -> &[u8] {
     use std::os::unix::ffi::OsStrExt;
     input.as_bytes()
 }

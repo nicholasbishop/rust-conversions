@@ -8,7 +8,7 @@ pub fn string_to_str(input: &String) -> &str {
     input.as_str()
 }
 
-pub fn string_to_u8_array(input: &String) -> &[u8] {
+pub fn string_to_u8_slice(input: &String) -> &[u8] {
     input.as_bytes()
 }
 
