@@ -45,13 +45,13 @@ pub fn str_to_os_string(input: &str) -> OsString {
 // nul-terminated or contains any interior nul bytes.
 //
 // If your input is not nul-terminated then a conversion without
-// allocation is not possible, so consider using `str_to_cstring`.
-pub fn str_to_cstr(input: &str) -> Result<&CStr, FromBytesWithNulError> {
+// allocation is not possible, so consider using `str_to_c_string`.
+pub fn str_to_c_str(input: &str) -> Result<&CStr, FromBytesWithNulError> {
     CStr::from_bytes_with_nul(input.as_bytes())
 }
 
 // A NulError will be returned if the input contains any nul bytes.
-pub fn str_to_cstring(input: &str) -> Result<CString, NulError> {
+pub fn str_to_c_string(input: &str) -> Result<CString, NulError> {
     CString::new(input)
 }
 
@@ -89,13 +89,13 @@ pub fn string_to_os_string(input: String) -> OsString {
 // nul-terminated or contains any interior nul bytes.
 //
 // If your input is not nul-terminated then a conversion without
-// allocation is not possible, so consider using `string_to_cstring`.
-pub fn string_to_cstr(input: &String) -> Result<&CStr, FromBytesWithNulError> {
+// allocation is not possible, so consider using `string_to_c_string`.
+pub fn string_to_c_str(input: &String) -> Result<&CStr, FromBytesWithNulError> {
     CStr::from_bytes_with_nul(input.as_bytes())
 }
 
 // A NulError will be returned if the input contains any nul bytes.
-pub fn string_to_cstring(input: String) -> Result<CString, NulError> {
+pub fn string_to_c_string(input: String) -> Result<CString, NulError> {
     CString::new(input)
 }
 
@@ -146,13 +146,13 @@ pub fn u8_array_to_os_string_unix(input: &[u8]) -> OsString {
 // nul-terminated or contains any interior nul bytes.
 //
 // If your input is not nul-terminated then a conversion without
-// allocation is not possible, so consider using `u8_array_to_cstring`.
-pub fn u8_array_to_cstr(input: &[u8]) -> Result<&CStr, FromBytesWithNulError> {
+// allocation is not possible, so consider using `u8_array_to_c_string`.
+pub fn u8_array_to_c_str(input: &[u8]) -> Result<&CStr, FromBytesWithNulError> {
     CStr::from_bytes_with_nul(input)
 }
 
 // A NulError will be returned if the input contains any nul bytes.
-pub fn u8_array_to_cstring(input: &[u8]) -> Result<CString, NulError> {
+pub fn u8_array_to_c_string(input: &[u8]) -> Result<CString, NulError> {
     CString::new(input)
 }
 
@@ -239,8 +239,8 @@ pub fn os_str_to_path_buf(input: &OsStr) -> PathBuf {
 // nul-terminated or contains any interior nul bytes.
 //
 // If your input is not nul-terminated then a conversion without
-// allocation is not possible, so consider using `os_str_to_cstring`.
-pub fn os_str_to_cstr_unix(
+// allocation is not possible, so consider using `os_str_to_c_string`.
+pub fn os_str_to_c_str_unix(
     input: &OsStr,
 ) -> Result<&CStr, FromBytesWithNulError> {
     use std::os::unix::ffi::OsStrExt;
@@ -250,7 +250,7 @@ pub fn os_str_to_cstr_unix(
 // This conversion is only allowed on Unix.
 //
 // A NulError will be returned if the input contains any nul bytes.
-pub fn os_str_to_cstring_unix(input: &OsStr) -> Result<CString, NulError> {
+pub fn os_str_to_c_string_unix(input: &OsStr) -> Result<CString, NulError> {
     use std::os::unix::ffi::OsStrExt;
     CString::new(input.as_bytes())
 }
