@@ -1,6 +1,7 @@
 use command_run::Command;
 use std::collections::BTreeSet;
 use std::fs;
+use std::path::Path;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Type {
@@ -321,7 +322,9 @@ fn direct_conversion(t1: Type, t2: Type) -> Conversion {
         (Type::OsStr, Type::OptionString) => {
             mkconv("{}.to_str().map(|s| s.to_string())")
         }
-        (Type::OsStr, Type::U8Slice) => mkconv("{}.as_bytes()"),
+        (Type::OsStr, Type::U8Slice) => {
+            mkconv("{}.as_bytes()").use_os_str_bytes()
+        }
         (Type::OsStr, Type::Path) => mkconv("Path::new({})"),
         (Type::OsStr, Type::PathBuf) => mkconv("PathBuf::from({})"),
         (Type::OsStr, Type::OsString) => mkconv("{}.to_os_string()"),
@@ -331,8 +334,12 @@ fn direct_conversion(t1: Type, t2: Type) -> Conversion {
         (Type::OsString, Type::ResultStringOrOsString) => {
             mkconv("{}.into_string()")
         }
-        (Type::OsStringRef, Type::U8Slice) => mkconv("{}.as_bytes()"),
-        (Type::OsString, Type::U8Vec) => mkconv("{}.into_vec()"),
+        (Type::OsStringRef, Type::U8Slice) => {
+            mkconv("{}.as_bytes()").use_os_str_bytes()
+        }
+        (Type::OsString, Type::U8Vec) => {
+            mkconv("{}.into_vec()").use_os_string_bytes()
+        }
         (Type::OsStringRef, Type::Path) => mkconv("Path::new({})"),
         (Type::OsString, Type::PathBuf) => mkconv("PathBuf::from({})"),
         (Type::OsStringRef, Type::OsStr) => mkconv("{}.as_os_str()"),
@@ -424,22 +431,36 @@ fn gen_one_conversion(anchor1: Type, anchor2: Type, code: &mut Code) {
     code.functions.push_str("\n\n");
 }
 
-fn gen_code() -> Code {
+fn gen_code(t1: Type) -> Code {
     let mut code = Code::default();
-    for t1 in Type::anchors() {
-        for t2 in Type::anchors() {
-            if t1 == t2 {
-                continue;
-            }
-
-            gen_one_conversion(*t1, *t2, &mut code);
+    for t2 in Type::anchors() {
+        if t1 == *t2 {
+            continue;
         }
+
+        gen_one_conversion(t1, *t2, &mut code);
     }
     code
 }
 
 fn main() {
-    fs::write("gen/src/lib.rs", gen_code().gen()).unwrap();
+    let gen_path = Path::new("gen/src");
+    let mut mods = Vec::new();
+
+    for t1 in Type::anchors() {
+        let mod_name = format!("from_{}", t1.short_name());
+        mods.push(mod_name.clone());
+
+        let path = gen_path.join(format!("{}.rs", mod_name));
+        fs::write(path, gen_code(*t1).gen()).unwrap();
+    }
+
+    let lib_code = mods
+        .iter()
+        .map(|s| format!("pub mod {};\n", s))
+        .collect::<Vec<_>>()
+        .join("");
+    fs::write(gen_path.join("lib.rs"), lib_code).unwrap();
 
     Command::new("cargo")
         .add_arg("fmt")
