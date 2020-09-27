@@ -5,4 +5,5 @@ authors = ["Nicholas Bishop <nicholasbishop@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+anyhow = "1.0"
 command-run = "0.13"

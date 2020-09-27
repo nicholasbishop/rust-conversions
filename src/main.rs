@@ -443,7 +443,7 @@ fn gen_code(t1: Type) -> Code {
     code
 }
 
-fn main() {
+fn main() -> Result<(), anyhow::Error> {
     let gen_path = Path::new("gen/src");
     let mut mods = Vec::new();
 
@@ -452,7 +452,7 @@ fn main() {
         mods.push(mod_name.clone());
 
         let path = gen_path.join(format!("{}.rs", mod_name));
-        fs::write(path, gen_code(*t1).gen()).unwrap();
+        fs::write(path, gen_code(*t1).gen())?;
     }
 
     let lib_code = mods
@@ -460,17 +460,14 @@ fn main() {
         .map(|s| format!("pub mod {};\n", s))
         .collect::<Vec<_>>()
         .join("");
-    fs::write(gen_path.join("lib.rs"), lib_code).unwrap();
+    fs::write(gen_path.join("lib.rs"), lib_code)?;
 
-    Command::new("cargo")
-        .add_arg("fmt")
-        .set_dir("gen")
-        .run()
-        .unwrap();
+    Command::new("cargo").add_arg("fmt").set_dir("gen").run()?;
 
     Command::new("cargo")
         .add_arg("check")
         .set_dir("gen")
-        .run()
-        .unwrap();
+        .run()?;
+
+    Ok(())
 }
