@@ -28,6 +28,7 @@ enum Type {
     OsStringRef,
     PathBufRef,
 
+    CowStr,
     OptionStr,
     OptionString,
     ResultStrOrUtf8Error,
@@ -65,6 +66,7 @@ impl Type {
             Type::PathBufRef => "&PathBuf",
             Type::OsStringRef => "&OsString",
 
+            Type::CowStr => "Cow<str>",
             Type::OptionStr => "Option<&str>",
             Type::OptionString => "Option<String>",
             Type::ResultStrOrUtf8Error => "Result<&str, Utf8Error>",
@@ -96,6 +98,8 @@ impl Type {
             Type::PathBuf => &["std::path::PathBuf"],
             Type::OsStr => &["std::ffi::OsStr"],
             Type::OsString => &["std::ffi::OsString"],
+
+            Type::CowStr => &["std::borrow::Cow"],
             Type::ResultStrOrUtf8Error => &["std::str::Utf8Error"],
             Type::ResultStringOrFromUtf8Error => {
                 &["std::string::FromUtf8Error"]
@@ -108,6 +112,11 @@ impl Type {
     /// return value.
     fn return_comment(&self) -> Option<&'static str> {
         match self {
+            Type::CowStr => {
+                Some("This never fails, but invalid UTF-8 sequences will be replaced with
+\"�\". This returns a `Cow<str>`; call `to_string()` to convert it to
+a `String`.")
+            }
             Type::OptionStr | Type::OptionString => {
                 Some("Returns None if the input is not valid UTF-8.")
             }
@@ -140,9 +149,10 @@ fn conversion_chains(t1: Type, t2: Type) -> &'static [&'static [Type]] {
         (Type::U8Slice, Type::Str) => {
             &[&[Type::U8Slice, Type::ResultStrOrUtf8Error]]
         }
-        (Type::U8Slice, Type::String) => {
-            &[&[Type::U8Slice, Type::ResultStringOrFromUtf8Error]]
-        }
+        (Type::U8Slice, Type::String) => &[
+            &[Type::U8Slice, Type::ResultStringOrFromUtf8Error],
+            &[Type::U8Slice, Type::CowStr],
+        ],
         (Type::U8Slice, Type::U8Vec) => &[&[Type::U8Slice, Type::U8Vec]],
         (Type::U8Slice, Type::Path) => {
             &[&[Type::U8Slice, Type::OsStr, Type::Path]]
@@ -303,6 +313,7 @@ fn direct_conversion(t1: Type, t2: Type) -> Conversion {
         (Type::U8Slice, Type::ResultStringOrFromUtf8Error) => {
             mkconv("String::from_utf8({}.to_vec())")
         }
+        (Type::U8Slice, Type::CowStr) => mkconv("String::from_utf8_lossy({})"),
         (Type::U8Slice, Type::U8Vec) => mkconv("{}.to_vec()"),
         (Type::U8Slice, Type::OsStr) => {
             mkconv("OsStr::from_bytes({})").use_os_str_bytes()
@@ -376,7 +387,9 @@ struct Code {
 
 impl Code {
     fn add_comment(&mut self, comment: &str) {
-        self.functions.push_str(&format!("// {}\n", comment));
+        for line in comment.lines() {
+            self.functions.push_str(&format!("// {}\n", line));
+        }
     }
 }
 
@@ -417,7 +430,13 @@ fn gen_one_conversion(
         }
     }
 
-    let suffix = if unix_only { "_unix" } else { "" };
+    let mut suffix = String::new();
+    if unix_only {
+        suffix.push_str("_unix");
+    }
+    if *output_type == Type::CowStr {
+        suffix.push_str("_lossy");
+    }
 
     let func = format!(
         "pub fn {}_to_{}{}(input: {}) -> {} {{\n    {}\n}}",
