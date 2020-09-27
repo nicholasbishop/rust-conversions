@@ -488,5 +488,5 @@ fn main() {
 
     run_cargo_cmd("fmt")?;
     run_cargo_cmd("clippy")?;
-    run_cargo_cmd("check")?;
+    run_cargo_cmd("build")?;
 }
