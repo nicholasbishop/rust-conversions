@@ -112,11 +112,11 @@ impl Type {
     /// return value.
     fn return_comment(&self) -> Option<&'static str> {
         match self {
-            Type::CowStr => {
-                Some("This never fails, but invalid UTF-8 sequences will be replaced with
-\"�\". This returns a `Cow<str>`; call `to_string()` to convert it to
-a `String`.")
-            }
+            Type::CowStr => Some(
+                "This never fails, but invalid UTF-8 sequences will be
+replaced with \"�\". This returns a `Cow<str>`; call `to_string()` to convert
+it to a `String`.",
+            ),
             Type::OptionStr | Type::OptionString => {
                 Some("Returns None if the input is not valid UTF-8.")
             }
@@ -387,7 +387,8 @@ struct Code {
 
 impl Code {
     fn add_comment(&mut self, comment: &str) {
-        for line in comment.lines() {
+        let wrapped = textwrap::fill(&comment.replace('\n', " "), 74);
+        for line in wrapped.lines() {
             self.functions.push_str(&format!("// {}\n", line));
         }
     }
