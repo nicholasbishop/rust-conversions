@@ -450,6 +450,27 @@ fn run_cargo_cmd(cmd: &str) {
     Command::new("cargo").add_arg(cmd).set_dir("gen").run()?;
 }
 
+fn gen_lib_code(mod_names: &[String]) -> String {
+    let pub_mods = mod_names
+        .iter()
+        .map(|s| format!("pub mod {};\n", s))
+        .collect::<Vec<_>>()
+        .join("");
+
+    format!(
+        "
+// The conversion functions use some argument types that you don't
+// ordinarly see, such as `&String`. The types are normally implicit,
+// for example `String::as_str` takes a `&String`. Since all of our
+// conversions are in separate functions, we have to explicitly use
+// these types.
+#![allow(clippy::ptr_arg)]
+
+{}",
+        pub_mods
+    )
+}
+
 #[throws]
 fn main() {
     let gen_path = Path::new("gen/src");
@@ -463,13 +484,9 @@ fn main() {
         fs::write(path, gen_code(*t1).gen())?;
     }
 
-    let lib_code = mods
-        .iter()
-        .map(|s| format!("pub mod {};\n", s))
-        .collect::<Vec<_>>()
-        .join("");
-    fs::write(gen_path.join("lib.rs"), lib_code)?;
+    fs::write(gen_path.join("lib.rs"), gen_lib_code(&mods))?;
 
     run_cargo_cmd("fmt")?;
+    run_cargo_cmd("clippy")?;
     run_cargo_cmd("check")?;
 }
