@@ -351,6 +351,12 @@ struct Code {
 }
 
 impl Code {
+    fn add_comment(&mut self, comment: &str) {
+        self.functions.push_str(&format!("// {}\n", comment));
+    }
+}
+
+impl Code {
     fn gen(&self) -> String {
         format!(
             "{}\n\n{}",
@@ -396,8 +402,7 @@ fn gen_one_conversion(anchor1: Type, anchor2: Type, code: &mut Code) {
     );
 
     if unix_only {
-        code.functions
-            .push_str("// This conversion is only allowed on Unix.\n");
+        code.add_comment("This conversion is only allowed on Unix.");
     }
 
     code.functions.push_str(&func);
