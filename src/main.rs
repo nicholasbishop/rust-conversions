@@ -208,82 +208,127 @@ fn conversion_chain(t1: Type, t2: Type) -> &'static [Type] {
     }
 }
 
-fn direct_conversion(expr: &str, t1: Type, t2: Type) -> String {
+#[derive(Default)]
+struct Conversion {
+    format: &'static str,
+    os_str_bytes: bool,
+    os_string_bytes: bool,
+}
+
+impl Conversion {
+    fn format_expr(&self, expr: String) -> String {
+        self.format.replace("{}", &expr)
+    }
+
+    fn uses(&self) -> Vec<&'static str> {
+        let mut uses = Vec::new();
+        if self.os_str_bytes {
+            uses.push("std::os::unix::ffi::OsStrExt");
+        }
+        if self.os_string_bytes {
+            uses.push("std::os::unix::ffi::OsStringExt");
+        }
+        uses
+    }
+
+    fn use_os_str_bytes(mut self) -> Self {
+        self.os_str_bytes = true;
+        self
+    }
+
+    fn use_os_string_bytes(mut self) -> Self {
+        self.os_string_bytes = true;
+        self
+    }
+}
+
+fn direct_conversion(t1: Type, t2: Type) -> Conversion {
+    fn mkconv(format: &'static str) -> Conversion {
+        Conversion {
+            format,
+            ..Default::default()
+        }
+    }
+
     match (t1, t2) {
         // From &str
-        (Type::Str, Type::String) => format!("{}.to_string()", expr),
-        (Type::Str, Type::U8Slice) => format!("{}.as_bytes()", expr),
-        (Type::Str, Type::Path) => format!("Path::new({})", expr),
-        (Type::Str, Type::PathBuf) => format!("PathBuf::from({})", expr),
-        (Type::Str, Type::OsStr) => format!("OsStr::new({})", expr),
-        (Type::Str, Type::OsString) => format!("OsString::from({})", expr),
+        (Type::Str, Type::String) => mkconv("{}.to_string()"),
+        (Type::Str, Type::U8Slice) => mkconv("{}.as_bytes()"),
+        (Type::Str, Type::Path) => mkconv("Path::new({})"),
+        (Type::Str, Type::PathBuf) => mkconv("PathBuf::from({})"),
+        (Type::Str, Type::OsStr) => mkconv("OsStr::new({})"),
+        (Type::Str, Type::OsString) => mkconv("OsString::from({})"),
 
         // From String
-        (Type::StringRef, Type::Str) => format!("{}.as_str()", expr),
-        (Type::StringRef, Type::U8Slice) => format!("{}.as_bytes()", expr),
-        (Type::String, Type::U8Vec) => format!("{}.into_bytes()", expr),
-        (Type::StringRef, Type::Path) => format!("Path::new({})", expr),
-        (Type::StringRef, Type::PathBuf) => format!("PathBuf::from({})", expr),
-        (Type::StringRef, Type::OsStr) => format!("OsStr::new({})", expr),
-        (Type::String, Type::OsString) => format!("OsString::from({})", expr),
+        (Type::StringRef, Type::Str) => mkconv("{}.as_str()"),
+        (Type::StringRef, Type::U8Slice) => mkconv("{}.as_bytes()"),
+        (Type::String, Type::U8Vec) => mkconv("{}.into_bytes()"),
+        (Type::StringRef, Type::Path) => mkconv("Path::new({})"),
+        (Type::StringRef, Type::PathBuf) => mkconv("PathBuf::from({})"),
+        (Type::StringRef, Type::OsStr) => mkconv("OsStr::new({})"),
+        (Type::String, Type::OsString) => mkconv("OsString::from({})"),
 
         // From &[u8]
         (Type::U8Slice, Type::ResultStrOrUtf8Error) => {
-            format!("std::str::from_utf8({})", expr)
+            mkconv("std::str::from_utf8({})")
         }
         (Type::U8Slice, Type::ResultStringOrFromUtf8Error) => {
-            format!("String::from_utf8({}.to_vec())", expr)
+            mkconv("String::from_utf8({}.to_vec())")
         }
-        (Type::U8Slice, Type::U8Vec) => format!("{}.to_vec()", expr),
-        (Type::U8Slice, Type::OsStr) => format!("OsStr::from_bytes({})", expr),
+        (Type::U8Slice, Type::U8Vec) => mkconv("{}.to_vec()"),
+        (Type::U8Slice, Type::OsStr) => {
+            mkconv("OsStr::from_bytes({})").use_os_str_bytes()
+        }
 
         // From Vec<u8>
         (Type::U8VecRef, Type::ResultStrOrUtf8Error) => {
-            format!("std::str::from_utf8({})", expr)
+            mkconv("std::str::from_utf8({})")
         }
         (Type::U8Vec, Type::ResultStringOrFromUtf8Error) => {
-            format!("String::from_utf8({})", expr)
+            mkconv("String::from_utf8({})")
         }
-        (Type::U8VecRef, Type::U8Slice) => format!("{}.as_slice()", expr),
-        (Type::U8VecRef, Type::OsStr) => format!("OsStr::from_bytes({})", expr),
+        (Type::U8VecRef, Type::U8Slice) => mkconv("{}.as_slice()"),
+        (Type::U8VecRef, Type::OsStr) => {
+            mkconv("OsStr::from_bytes({})").use_os_str_bytes()
+        }
         (Type::U8Vec, Type::OsString) => {
-            format!("OsString::from_vec({})", expr)
+            mkconv("OsString::from_vec({})").use_os_string_bytes()
         }
 
         // From &OsStr
-        (Type::OsStr, Type::OptionStr) => format!("{}.to_str()", expr),
+        (Type::OsStr, Type::OptionStr) => mkconv("{}.to_str()"),
         (Type::OsStr, Type::OptionString) => {
-            format!("{}.to_str().map(|s| s.to_string())", expr)
+            mkconv("{}.to_str().map(|s| s.to_string())")
         }
-        (Type::OsStr, Type::U8Slice) => format!("{}.as_bytes()", expr),
-        (Type::OsStr, Type::Path) => format!("Path::new({})", expr),
-        (Type::OsStr, Type::PathBuf) => format!("PathBuf::from({})", expr),
-        (Type::OsStr, Type::OsString) => format!("{}.to_os_string()", expr),
+        (Type::OsStr, Type::U8Slice) => mkconv("{}.as_bytes()"),
+        (Type::OsStr, Type::Path) => mkconv("Path::new({})"),
+        (Type::OsStr, Type::PathBuf) => mkconv("PathBuf::from({})"),
+        (Type::OsStr, Type::OsString) => mkconv("{}.to_os_string()"),
 
         // From OsString
-        (Type::OsStringRef, Type::OptionStr) => format!("{}.to_str()", expr),
+        (Type::OsStringRef, Type::OptionStr) => mkconv("{}.to_str()"),
         (Type::OsString, Type::ResultStringOrOsString) => {
-            format!("{}.into_string()", expr)
+            mkconv("{}.into_string()")
         }
-        (Type::OsStringRef, Type::U8Slice) => format!("{}.as_bytes()", expr),
-        (Type::OsString, Type::U8Vec) => format!("{}.into_vec()", expr),
-        (Type::OsStringRef, Type::Path) => format!("Path::new({})", expr),
-        (Type::OsString, Type::PathBuf) => format!("PathBuf::from({})", expr),
-        (Type::OsStringRef, Type::OsStr) => format!("{}.as_os_str()", expr),
+        (Type::OsStringRef, Type::U8Slice) => mkconv("{}.as_bytes()"),
+        (Type::OsString, Type::U8Vec) => mkconv("{}.into_vec()"),
+        (Type::OsStringRef, Type::Path) => mkconv("Path::new({})"),
+        (Type::OsString, Type::PathBuf) => mkconv("PathBuf::from({})"),
+        (Type::OsStringRef, Type::OsStr) => mkconv("{}.as_os_str()"),
 
         // From &Path
-        (Type::Path, Type::OptionStr) => format!("{}.to_str()", expr),
+        (Type::Path, Type::OptionStr) => mkconv("{}.to_str()"),
         (Type::Path, Type::OptionString) => {
-            format!("{}.to_str().map(|s| s.to_string())", expr)
+            mkconv("{}.to_str().map(|s| s.to_string())")
         }
-        (Type::Path, Type::PathBuf) => format!("{}.to_path_buf()", expr),
-        (Type::Path, Type::OsStr) => format!("{}.as_os_str()", expr),
+        (Type::Path, Type::PathBuf) => mkconv("{}.to_path_buf()"),
+        (Type::Path, Type::OsStr) => mkconv("{}.as_os_str()"),
 
         // From PathBuf
-        (Type::PathBuf, Type::Path) => format!("{}.as_path()", expr),
-        (Type::PathBufRef, Type::Path) => format!("{}.as_path()", expr),
-        (Type::PathBufRef, Type::OsStr) => format!("{}.as_os_str()", expr),
-        (Type::PathBuf, Type::OsString) => format!("{}.into_os_string()", expr),
+        (Type::PathBuf, Type::Path) => mkconv("{}.as_path()"),
+        (Type::PathBufRef, Type::Path) => mkconv("{}.as_path()"),
+        (Type::PathBufRef, Type::OsStr) => mkconv("{}.as_os_str()"),
+        (Type::PathBuf, Type::OsString) => mkconv("{}.into_os_string()"),
 
         _ => panic!("invalid direct conversion: {:?} -> {:?}", t1, t2),
     }
@@ -291,15 +336,14 @@ fn direct_conversion(expr: &str, t1: Type, t2: Type) -> String {
 
 #[derive(Default)]
 struct Code {
-    uses: BTreeSet<String>,
+    uses: BTreeSet<&'static str>,
     functions: String,
 }
 
 impl Code {
     fn gen(&self) -> String {
-        // TODO: figure out better way to handle trait uses
         format!(
-            "use std::os::unix::ffi::OsStringExt;\nuse std::os::unix::ffi::OsStrExt;\n{}\n\n{}",
+            "{}\n\n{}",
             self.uses
                 .iter()
                 .map(|s| format!("use {};", s))
@@ -318,9 +362,11 @@ fn gen_one_conversion(anchor1: Type, anchor2: Type, code: &mut Code) {
     let output_type = chain.last().unwrap();
 
     for (t3, t4) in chain.iter().zip(chain.iter().skip(1)) {
-        expr = direct_conversion(&expr, *t3, *t4);
-        code.uses.extend(t3.uses().iter().map(|s| s.to_string()));
-        code.uses.extend(t4.uses().iter().map(|s| s.to_string()));
+        let conv = direct_conversion(*t3, *t4);
+        expr = conv.format_expr(expr);
+        code.uses.extend(t3.uses());
+        code.uses.extend(t4.uses());
+        code.uses.extend(conv.uses());
     }
 
     let func = format!(
