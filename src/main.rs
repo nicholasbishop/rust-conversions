@@ -1,4 +1,6 @@
+use anyhow::Error;
 use command_run::Command;
+use fehler::throws;
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
@@ -443,7 +445,13 @@ fn gen_code(t1: Type) -> Code {
     code
 }
 
-fn main() -> Result<(), anyhow::Error> {
+#[throws]
+fn run_cargo_cmd(cmd: &str) {
+    Command::new("cargo").add_arg(cmd).set_dir("gen").run()?;
+}
+
+#[throws]
+fn main() {
     let gen_path = Path::new("gen/src");
     let mut mods = Vec::new();
 
@@ -462,12 +470,6 @@ fn main() -> Result<(), anyhow::Error> {
         .join("");
     fs::write(gen_path.join("lib.rs"), lib_code)?;
 
-    Command::new("cargo").add_arg("fmt").set_dir("gen").run()?;
-
-    Command::new("cargo")
-        .add_arg("check")
-        .set_dir("gen")
-        .run()?;
-
-    Ok(())
+    run_cargo_cmd("fmt")?;
+    run_cargo_cmd("check")?;
 }
