@@ -9,7 +9,7 @@ enum Type {
     U8Slice,
     U8Vec,
     Path,
-    // TODO: PathBuf
+    PathBuf,
     OsStr,
     OsString,
     // TODO: CStr
@@ -17,6 +17,7 @@ enum Type {
     StringRef,
     U8VecRef,
     OsStringRef,
+    PathBufRef,
 
     OptionStr,
     OptionString,
@@ -33,6 +34,7 @@ impl Type {
             Type::U8Slice,
             Type::U8Vec,
             Type::Path,
+            Type::PathBuf,
             Type::OsStr,
             Type::OsString,
         ]
@@ -45,11 +47,13 @@ impl Type {
             Type::U8Slice => "&[u8]",
             Type::U8Vec => "Vec<u8>",
             Type::Path => "&Path",
+            Type::PathBuf => "PathBuf",
             Type::OsStr => "&OsStr",
             Type::OsString => "OsString",
 
             Type::StringRef => "&String",
             Type::U8VecRef => "&Vec<u8>",
+            Type::PathBufRef => "&PathBuf",
             Type::OsStringRef => "&OsString",
 
             Type::OptionStr => "Option<&str>",
@@ -69,6 +73,7 @@ impl Type {
             Type::U8Slice => "u8_slice",
             Type::U8Vec => "u8_vec",
             Type::Path => "path",
+            Type::PathBuf => "path_buf",
             Type::OsStr => "os_str",
             Type::OsString => "os_string",
 
@@ -79,6 +84,7 @@ impl Type {
     fn uses(&self) -> &'static [&'static str] {
         match self {
             Type::Path => &["std::path::Path"],
+            Type::PathBuf => &["std::path::PathBuf"],
             Type::OsStr => &["std::ffi::OsStr"],
             Type::OsString => &["std::ffi::OsString"],
             Type::ResultStrOrUtf8Error => &["std::str::Utf8Error"],
@@ -97,6 +103,7 @@ fn conversion_chain(t1: Type, t2: Type) -> &'static [Type] {
         (Type::Str, Type::U8Slice) => &[Type::Str, Type::U8Slice],
         (Type::Str, Type::U8Vec) => &[Type::Str, Type::U8Slice, Type::U8Vec],
         (Type::Str, Type::Path) => &[Type::Str, Type::Path],
+        (Type::Str, Type::PathBuf) => &[Type::Str, Type::PathBuf],
         (Type::Str, Type::OsStr) => &[Type::Str, Type::OsStr],
         (Type::Str, Type::OsString) => &[Type::Str, Type::OsString],
 
@@ -105,6 +112,7 @@ fn conversion_chain(t1: Type, t2: Type) -> &'static [Type] {
         (Type::String, Type::U8Slice) => &[Type::StringRef, Type::U8Slice],
         (Type::String, Type::U8Vec) => &[Type::String, Type::U8Vec],
         (Type::String, Type::Path) => &[Type::StringRef, Type::Path],
+        (Type::String, Type::PathBuf) => &[Type::StringRef, Type::PathBuf],
         (Type::String, Type::OsStr) => &[Type::StringRef, Type::OsStr],
         (Type::String, Type::OsString) => &[Type::String, Type::OsString],
 
@@ -118,6 +126,9 @@ fn conversion_chain(t1: Type, t2: Type) -> &'static [Type] {
         (Type::U8Slice, Type::U8Vec) => &[Type::U8Slice, Type::U8Vec],
         (Type::U8Slice, Type::Path) => {
             &[Type::U8Slice, Type::OsStr, Type::Path]
+        }
+        (Type::U8Slice, Type::PathBuf) => {
+            &[Type::U8Slice, Type::OsStr, Type::PathBuf]
         }
         (Type::U8Slice, Type::OsStr) => &[Type::U8Slice, Type::OsStr],
         (Type::U8Slice, Type::OsString) => {
@@ -133,6 +144,9 @@ fn conversion_chain(t1: Type, t2: Type) -> &'static [Type] {
         }
         (Type::U8Vec, Type::U8Slice) => &[Type::U8VecRef, Type::U8Slice],
         (Type::U8Vec, Type::Path) => &[Type::U8VecRef, Type::OsStr, Type::Path],
+        (Type::U8Vec, Type::PathBuf) => {
+            &[Type::U8Vec, Type::OsString, Type::PathBuf]
+        }
         (Type::U8Vec, Type::OsStr) => &[Type::U8VecRef, Type::OsStr],
         (Type::U8Vec, Type::OsString) => &[Type::U8Vec, Type::OsString],
 
@@ -145,10 +159,28 @@ fn conversion_chain(t1: Type, t2: Type) -> &'static [Type] {
         (Type::Path, Type::U8Vec) => {
             &[Type::Path, Type::OsStr, Type::U8Slice, Type::U8Vec]
         }
+        (Type::Path, Type::PathBuf) => &[Type::Path, Type::PathBuf],
         (Type::Path, Type::OsStr) => &[Type::Path, Type::OsStr],
         (Type::Path, Type::OsString) => {
             &[Type::Path, Type::OsStr, Type::OsString]
         }
+
+        // From PathBuf
+        (Type::PathBuf, Type::Str) => {
+            &[Type::PathBufRef, Type::Path, Type::OptionStr]
+        }
+        (Type::PathBuf, Type::String) => {
+            &[Type::PathBuf, Type::Path, Type::OptionString]
+        }
+        (Type::PathBuf, Type::U8Slice) => {
+            &[Type::PathBufRef, Type::OsStr, Type::U8Slice]
+        }
+        (Type::PathBuf, Type::U8Vec) => {
+            &[Type::PathBuf, Type::OsString, Type::U8Vec]
+        }
+        (Type::PathBuf, Type::Path) => &[Type::PathBufRef, Type::Path],
+        (Type::PathBuf, Type::OsStr) => &[Type::PathBufRef, Type::OsStr],
+        (Type::PathBuf, Type::OsString) => &[Type::PathBuf, Type::OsString],
 
         // From &OsStr
         (Type::OsStr, Type::Str) => &[Type::OsStr, Type::OptionStr],
@@ -158,6 +190,7 @@ fn conversion_chain(t1: Type, t2: Type) -> &'static [Type] {
             &[Type::OsStr, Type::U8Slice, Type::U8Vec]
         }
         (Type::OsStr, Type::Path) => &[Type::OsStr, Type::Path],
+        (Type::OsStr, Type::PathBuf) => &[Type::OsStr, Type::PathBuf],
         (Type::OsStr, Type::OsString) => &[Type::OsStr, Type::OsString],
 
         // From OsString
@@ -168,6 +201,7 @@ fn conversion_chain(t1: Type, t2: Type) -> &'static [Type] {
         (Type::OsString, Type::U8Slice) => &[Type::OsStringRef, Type::U8Slice],
         (Type::OsString, Type::U8Vec) => &[Type::OsString, Type::U8Vec],
         (Type::OsString, Type::Path) => &[Type::OsStringRef, Type::Path],
+        (Type::OsString, Type::PathBuf) => &[Type::OsString, Type::PathBuf],
         (Type::OsString, Type::OsStr) => &[Type::OsStringRef, Type::OsStr],
 
         _ => panic!("invalid conversion chain: {:?} -> {:?}", t1, t2),
@@ -180,6 +214,7 @@ fn direct_conversion(expr: &str, t1: Type, t2: Type) -> String {
         (Type::Str, Type::String) => format!("{}.to_string()", expr),
         (Type::Str, Type::U8Slice) => format!("{}.as_bytes()", expr),
         (Type::Str, Type::Path) => format!("Path::new({})", expr),
+        (Type::Str, Type::PathBuf) => format!("PathBuf::from({})", expr),
         (Type::Str, Type::OsStr) => format!("OsStr::new({})", expr),
         (Type::Str, Type::OsString) => format!("OsString::from({})", expr),
 
@@ -188,6 +223,7 @@ fn direct_conversion(expr: &str, t1: Type, t2: Type) -> String {
         (Type::StringRef, Type::U8Slice) => format!("{}.as_bytes()", expr),
         (Type::String, Type::U8Vec) => format!("{}.into_bytes()", expr),
         (Type::StringRef, Type::Path) => format!("Path::new({})", expr),
+        (Type::StringRef, Type::PathBuf) => format!("PathBuf::from({})", expr),
         (Type::StringRef, Type::OsStr) => format!("OsStr::new({})", expr),
         (Type::String, Type::OsString) => format!("OsString::from({})", expr),
 
@@ -214,13 +250,6 @@ fn direct_conversion(expr: &str, t1: Type, t2: Type) -> String {
             format!("OsString::from_vec({})", expr)
         }
 
-        // From &Path
-        (Type::Path, Type::OptionStr) => format!("{}.to_str()", expr),
-        (Type::Path, Type::OptionString) => {
-            format!("{}.to_str().map(|s| s.to_string())", expr)
-        }
-        (Type::Path, Type::OsStr) => format!("{}.as_os_str()", expr),
-
         // From &OsStr
         (Type::OsStr, Type::OptionStr) => format!("{}.to_str()", expr),
         (Type::OsStr, Type::OptionString) => {
@@ -228,6 +257,7 @@ fn direct_conversion(expr: &str, t1: Type, t2: Type) -> String {
         }
         (Type::OsStr, Type::U8Slice) => format!("{}.as_bytes()", expr),
         (Type::OsStr, Type::Path) => format!("Path::new({})", expr),
+        (Type::OsStr, Type::PathBuf) => format!("PathBuf::from({})", expr),
         (Type::OsStr, Type::OsString) => format!("{}.to_os_string()", expr),
 
         // From OsString
@@ -238,7 +268,22 @@ fn direct_conversion(expr: &str, t1: Type, t2: Type) -> String {
         (Type::OsStringRef, Type::U8Slice) => format!("{}.as_bytes()", expr),
         (Type::OsString, Type::U8Vec) => format!("{}.into_vec()", expr),
         (Type::OsStringRef, Type::Path) => format!("Path::new({})", expr),
+        (Type::OsString, Type::PathBuf) => format!("PathBuf::from({})", expr),
         (Type::OsStringRef, Type::OsStr) => format!("{}.as_os_str()", expr),
+
+        // From &Path
+        (Type::Path, Type::OptionStr) => format!("{}.to_str()", expr),
+        (Type::Path, Type::OptionString) => {
+            format!("{}.to_str().map(|s| s.to_string())", expr)
+        }
+        (Type::Path, Type::PathBuf) => format!("{}.to_path_buf()", expr),
+        (Type::Path, Type::OsStr) => format!("{}.as_os_str()", expr),
+
+        // From PathBuf
+        (Type::PathBuf, Type::Path) => format!("{}.as_path()", expr),
+        (Type::PathBufRef, Type::Path) => format!("{}.as_path()", expr),
+        (Type::PathBufRef, Type::OsStr) => format!("{}.as_os_str()", expr),
+        (Type::PathBuf, Type::OsString) => format!("{}.into_os_string()", expr),
 
         _ => panic!("invalid direct conversion: {:?} -> {:?}", t1, t2),
     }
