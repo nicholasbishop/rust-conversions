@@ -226,6 +226,10 @@ impl Conversion {
         self.format.replace("{}", &expr)
     }
 
+    fn unix_only(&self) -> bool {
+        self.os_str_bytes || self.os_string_bytes
+    }
+
     fn uses(&self) -> Vec<&'static str> {
         let mut uses = Vec::new();
         if self.os_str_bytes {
@@ -366,6 +370,7 @@ fn gen_one_conversion(anchor1: Type, anchor2: Type, code: &mut Code) {
 
     let input_type = chain.first().unwrap();
     let output_type = chain.last().unwrap();
+    let mut unix_only = false;
 
     for (t3, t4) in chain.iter().zip(chain.iter().skip(1)) {
         let conv = direct_conversion(*t3, *t4);
@@ -373,16 +378,27 @@ fn gen_one_conversion(anchor1: Type, anchor2: Type, code: &mut Code) {
         code.uses.extend(t3.uses());
         code.uses.extend(t4.uses());
         code.uses.extend(conv.uses());
+        if conv.unix_only() {
+            unix_only = true;
+        }
     }
 
+    let suffix = if unix_only { "_unix" } else { "" };
+
     let func = format!(
-        "pub fn {}_to_{}(input: {}) -> {} {{\n    {}\n}}",
+        "pub fn {}_to_{}{}(input: {}) -> {} {{\n    {}\n}}",
         anchor1.short_name(),
         anchor2.short_name(),
+        suffix,
         input_type.type_str(),
         output_type.type_str(),
         expr
     );
+
+    if unix_only {
+        code.functions
+            .push_str("// This conversion is only allowed on Unix.\n");
+    }
 
     code.functions.push_str(&func);
     code.functions.push_str("\n\n");
