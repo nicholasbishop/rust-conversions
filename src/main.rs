@@ -100,6 +100,17 @@ impl Type {
             _ => &[],
         }
     }
+
+    /// Optional comment associated with the type when used as a
+    /// return value.
+    fn return_comment(&self) -> Option<&'static str> {
+        match self {
+            Type::OptionStr | Type::OptionString => {
+                Some("Returns None if the input is not valid UTF-8.")
+            }
+            _ => None,
+        }
+    }
 }
 
 fn conversion_chain(t1: Type, t2: Type) -> &'static [Type] {
@@ -403,6 +414,10 @@ fn gen_one_conversion(anchor1: Type, anchor2: Type, code: &mut Code) {
 
     if unix_only {
         code.add_comment("This conversion is only allowed on Unix.");
+    }
+
+    if let Some(comment) = output_type.return_comment() {
+        code.add_comment(comment);
     }
 
     code.functions.push_str(&func);
