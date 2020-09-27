@@ -14,6 +14,12 @@ enum Type {
     OsString,
     // TODO: CStr
     // TODO: CString
+
+    // Ordinarily you never see these types in a function signature,
+    // but they often show up as temporary types that you don't
+    // explicitly see. For example, `String::as_str` takes a
+    // `&String`. Since all of our conversions are in a separate
+    // function, we have to explicitly use these types.
     StringRef,
     U8VecRef,
     OsStringRef,
