@@ -1,3 +1,0 @@
-//! Conversions from CString
-
-// TODO
