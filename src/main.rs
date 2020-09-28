@@ -18,7 +18,7 @@ enum Type {
     OsStr,
     OsString,
     CStr,
-    // TODO: CString
+    CString,
 
     // Ordinarily you never see these types in a function signature,
     // but they often show up as temporary types that you don't
@@ -29,6 +29,7 @@ enum Type {
     U8VecRef,
     OsStringRef,
     PathBufRef,
+    CStringRef,
 
     CowStr,
     OptionStr,
@@ -38,6 +39,8 @@ enum Type {
     ResultStringOrFromUtf8Error,
     ResultStringOrOsString,
     ResultCStrOrFromBytesWithNulError,
+    ResultCStringOrFromBytesWithNulError,
+    ResultStringOrIntoStringError,
 }
 
 impl Type {
@@ -52,6 +55,7 @@ impl Type {
             Type::OsStr,
             Type::OsString,
             Type::CStr,
+            Type::CString,
         ]
     }
 
@@ -66,11 +70,13 @@ impl Type {
             Type::OsStr => "&OsStr",
             Type::OsString => "OsString",
             Type::CStr => "&CStr",
+            Type::CString => "CString",
 
             Type::StringRef => "&String",
             Type::U8VecRef => "&Vec<u8>",
             Type::PathBufRef => "&PathBuf",
             Type::OsStringRef => "&OsString",
+            Type::CStringRef => "&CString",
 
             Type::CowStr => "Cow<str>",
             Type::OptionStr => "Option<&str>",
@@ -83,6 +89,12 @@ impl Type {
             Type::ResultStringOrOsString => "Result<String, OsString>",
             Type::ResultCStrOrFromBytesWithNulError => {
                 "Result<&CStr, FromBytesWithNulError>"
+            }
+            Type::ResultCStringOrFromBytesWithNulError => {
+                "Result<CString, FromBytesWithNulError>"
+            }
+            Type::ResultStringOrIntoStringError => {
+                "Result<String, IntoStringError>"
             }
         }
     }
@@ -98,6 +110,7 @@ impl Type {
             Type::OsStr => "os_str",
             Type::OsString => "os_string",
             Type::CStr => "c_str",
+            Type::CString => "c_string",
 
             _ => panic!("no short name for {:?}", self),
         }
@@ -110,6 +123,7 @@ impl Type {
             Type::OsStr => &["std::ffi::OsStr"],
             Type::OsString => &["std::ffi::OsString"],
             Type::CStr => &["std::ffi::CStr"],
+            Type::CString => &["std::ffi::CString"],
 
             Type::CowStr => &["std::borrow::Cow"],
             Type::ResultStrOrUtf8Error => &["std::str::Utf8Error"],
@@ -118,6 +132,12 @@ impl Type {
             }
             Type::ResultCStrOrFromBytesWithNulError => {
                 &["std::ffi::CStr", "std::ffi::FromBytesWithNulError"]
+            }
+            Type::ResultCStringOrFromBytesWithNulError => {
+                &["std::ffi::CString", "std::ffi::FromBytesWithNulError"]
+            }
+            Type::ResultStringOrIntoStringError => {
+                &["std::ffi::IntoStringError"]
             }
             _ => &[],
         }
@@ -144,190 +164,6 @@ is not possible, convert to a CString instead.",
             ),
             _ => None,
         }
-    }
-}
-
-fn conversion_chains(t1: Type, t2: Type) -> &'static [&'static [Type]] {
-    match (t1, t2) {
-        // From &str
-        (Type::Str, Type::String) => &[&[Type::Str, Type::String]],
-        (Type::Str, Type::U8Slice) => &[&[Type::Str, Type::U8Slice]],
-        (Type::Str, Type::U8Vec) => &[&[Type::Str, Type::U8Slice, Type::U8Vec]],
-        (Type::Str, Type::Path) => &[&[Type::Str, Type::Path]],
-        (Type::Str, Type::PathBuf) => &[&[Type::Str, Type::PathBuf]],
-        (Type::Str, Type::OsStr) => &[&[Type::Str, Type::OsStr]],
-        (Type::Str, Type::OsString) => &[&[Type::Str, Type::OsString]],
-        (Type::Str, Type::CStr) => &[&[
-            Type::Str,
-            Type::U8Slice,
-            Type::ResultCStrOrFromBytesWithNulError,
-        ]],
-
-        // From String
-        (Type::String, Type::Str) => &[&[Type::StringRef, Type::Str]],
-        (Type::String, Type::U8Slice) => &[&[Type::StringRef, Type::U8Slice]],
-        (Type::String, Type::U8Vec) => &[&[Type::String, Type::U8Vec]],
-        (Type::String, Type::Path) => &[&[Type::StringRef, Type::Path]],
-        (Type::String, Type::PathBuf) => &[&[Type::StringRef, Type::PathBuf]],
-        (Type::String, Type::OsStr) => &[&[Type::StringRef, Type::OsStr]],
-        (Type::String, Type::OsString) => &[&[Type::String, Type::OsString]],
-        (Type::String, Type::CStr) => &[&[
-            Type::StringRef,
-            Type::U8Slice,
-            Type::ResultCStrOrFromBytesWithNulError,
-        ]],
-
-        // From &[u8]
-        (Type::U8Slice, Type::Str) => {
-            &[&[Type::U8Slice, Type::ResultStrOrUtf8Error]]
-        }
-        (Type::U8Slice, Type::String) => &[
-            &[Type::U8Slice, Type::ResultStringOrFromUtf8Error],
-            &[Type::U8Slice, Type::CowStr],
-        ],
-        (Type::U8Slice, Type::U8Vec) => &[&[Type::U8Slice, Type::U8Vec]],
-        (Type::U8Slice, Type::Path) => {
-            &[&[Type::U8Slice, Type::OsStr, Type::Path]]
-        }
-        (Type::U8Slice, Type::PathBuf) => {
-            &[&[Type::U8Slice, Type::OsStr, Type::PathBuf]]
-        }
-        (Type::U8Slice, Type::OsStr) => &[&[Type::U8Slice, Type::OsStr]],
-        (Type::U8Slice, Type::OsString) => {
-            &[&[Type::U8Slice, Type::U8Vec, Type::OsString]]
-        }
-        (Type::U8Slice, Type::CStr) => {
-            &[&[Type::U8Slice, Type::ResultCStrOrFromBytesWithNulError]]
-        }
-
-        // From Vec<u8>
-        (Type::U8Vec, Type::Str) => {
-            &[&[Type::U8VecRef, Type::ResultStrOrUtf8Error]]
-        }
-        (Type::U8Vec, Type::String) => {
-            &[&[Type::U8Vec, Type::ResultStringOrFromUtf8Error]]
-        }
-        (Type::U8Vec, Type::U8Slice) => &[&[Type::U8VecRef, Type::U8Slice]],
-        (Type::U8Vec, Type::Path) => {
-            &[&[Type::U8VecRef, Type::OsStr, Type::Path]]
-        }
-        (Type::U8Vec, Type::PathBuf) => {
-            &[&[Type::U8Vec, Type::OsString, Type::PathBuf]]
-        }
-        (Type::U8Vec, Type::OsStr) => &[&[Type::U8VecRef, Type::OsStr]],
-        (Type::U8Vec, Type::OsString) => &[&[Type::U8Vec, Type::OsString]],
-        (Type::U8Vec, Type::CStr) => {
-            &[&[Type::U8VecRef, Type::ResultCStrOrFromBytesWithNulError]]
-        }
-
-        // From &Path
-        (Type::Path, Type::Str) => &[&[Type::Path, Type::OptionStr]],
-        (Type::Path, Type::String) => &[&[Type::Path, Type::OptionString]],
-        (Type::Path, Type::U8Slice) => {
-            &[&[Type::Path, Type::OsStr, Type::U8Slice]]
-        }
-        (Type::Path, Type::U8Vec) => {
-            &[&[Type::Path, Type::OsStr, Type::U8Slice, Type::U8Vec]]
-        }
-        (Type::Path, Type::PathBuf) => &[&[Type::Path, Type::PathBuf]],
-        (Type::Path, Type::OsStr) => &[&[Type::Path, Type::OsStr]],
-        (Type::Path, Type::OsString) => {
-            &[&[Type::Path, Type::OsStr, Type::OsString]]
-        }
-        (Type::Path, Type::CStr) => &[&[
-            Type::Path,
-            Type::OsStr,
-            Type::U8Slice,
-            Type::ResultCStrOrFromBytesWithNulError,
-        ]],
-
-        // From PathBuf
-        (Type::PathBuf, Type::Str) => {
-            &[&[Type::PathBufRef, Type::Path, Type::OptionStr]]
-        }
-        (Type::PathBuf, Type::String) => {
-            &[&[Type::PathBuf, Type::Path, Type::OptionString]]
-        }
-        (Type::PathBuf, Type::U8Slice) => {
-            &[&[Type::PathBufRef, Type::OsStr, Type::U8Slice]]
-        }
-        (Type::PathBuf, Type::U8Vec) => {
-            &[&[Type::PathBuf, Type::OsString, Type::U8Vec]]
-        }
-        (Type::PathBuf, Type::Path) => &[&[Type::PathBufRef, Type::Path]],
-        (Type::PathBuf, Type::OsStr) => &[&[Type::PathBufRef, Type::OsStr]],
-        (Type::PathBuf, Type::OsString) => &[&[Type::PathBuf, Type::OsString]],
-        (Type::PathBuf, Type::CStr) => &[&[
-            Type::PathBufRef,
-            Type::OsStr,
-            Type::U8Slice,
-            Type::ResultCStrOrFromBytesWithNulError,
-        ]],
-
-        // From &OsStr
-        (Type::OsStr, Type::Str) => &[&[Type::OsStr, Type::OptionStr]],
-        (Type::OsStr, Type::String) => &[&[Type::OsStr, Type::OptionString]],
-        (Type::OsStr, Type::U8Slice) => &[&[Type::OsStr, Type::U8Slice]],
-        (Type::OsStr, Type::U8Vec) => {
-            &[&[Type::OsStr, Type::U8Slice, Type::U8Vec]]
-        }
-        (Type::OsStr, Type::Path) => &[&[Type::OsStr, Type::Path]],
-        (Type::OsStr, Type::PathBuf) => &[&[Type::OsStr, Type::PathBuf]],
-        (Type::OsStr, Type::OsString) => &[&[Type::OsStr, Type::OsString]],
-        (Type::OsStr, Type::CStr) => &[&[
-            Type::OsStr,
-            Type::U8Slice,
-            Type::ResultCStrOrFromBytesWithNulError,
-        ]],
-
-        // From OsString
-        (Type::OsString, Type::Str) => &[&[Type::OsStringRef, Type::OptionStr]],
-        (Type::OsString, Type::String) => {
-            &[&[Type::OsString, Type::ResultStringOrOsString]]
-        }
-        (Type::OsString, Type::U8Slice) => {
-            &[&[Type::OsStringRef, Type::U8Slice]]
-        }
-        (Type::OsString, Type::U8Vec) => &[&[Type::OsString, Type::U8Vec]],
-        (Type::OsString, Type::Path) => &[&[Type::OsStringRef, Type::Path]],
-        (Type::OsString, Type::PathBuf) => &[&[Type::OsString, Type::PathBuf]],
-        (Type::OsString, Type::OsStr) => &[&[Type::OsStringRef, Type::OsStr]],
-        (Type::OsString, Type::CStr) => &[&[
-            Type::OsStringRef,
-            Type::U8Slice,
-            Type::ResultCStrOrFromBytesWithNulError,
-        ]],
-
-        // From &CStr
-        (Type::CStr, Type::Str) => &[&[Type::CStr, Type::ResultStrOrUtf8Error]],
-        (Type::CStr, Type::String) => &[&[
-            Type::CStr,
-            Type::ResultStrOrUtf8Error,
-            Type::ResultStringOrUtf8Error,
-        ]],
-        // TODO: add lossy string conversion
-        (Type::CStr, Type::U8Slice) => &[&[Type::CStr, Type::U8Slice]],
-        (Type::CStr, Type::U8Vec) => {
-            &[&[Type::CStr, Type::U8Slice, Type::U8Vec]]
-        }
-        (Type::CStr, Type::Path) => {
-            &[&[Type::CStr, Type::U8Slice, Type::OsStr, Type::Path]]
-        }
-        (Type::CStr, Type::PathBuf) => &[&[
-            Type::CStr,
-            Type::U8Slice,
-            Type::OsStr,
-            Type::Path,
-            Type::PathBuf,
-        ]],
-        (Type::CStr, Type::OsStr) => {
-            &[&[Type::CStr, Type::U8Slice, Type::OsStr]]
-        }
-        (Type::CStr, Type::OsString) => {
-            &[&[Type::CStr, Type::U8Slice, Type::OsStr, Type::OsString]]
-        }
-
-        _ => panic!("invalid conversion chain: {:?} -> {:?}", t1, t2),
     }
 }
 
@@ -366,6 +202,264 @@ impl Conversion {
     fn use_os_string_bytes(mut self) -> Self {
         self.os_string_bytes = true;
         self
+    }
+}
+
+fn conversion_chains(t1: Type, t2: Type) -> &'static [&'static [Type]] {
+    match (t1, t2) {
+        // From &str
+        (Type::Str, Type::String) => &[&[Type::Str, Type::String]],
+        (Type::Str, Type::U8Slice) => &[&[Type::Str, Type::U8Slice]],
+        (Type::Str, Type::U8Vec) => &[&[Type::Str, Type::U8Slice, Type::U8Vec]],
+        (Type::Str, Type::Path) => &[&[Type::Str, Type::Path]],
+        (Type::Str, Type::PathBuf) => &[&[Type::Str, Type::PathBuf]],
+        (Type::Str, Type::OsStr) => &[&[Type::Str, Type::OsStr]],
+        (Type::Str, Type::OsString) => &[&[Type::Str, Type::OsString]],
+        (Type::Str, Type::CStr) => &[&[
+            Type::Str,
+            Type::U8Slice,
+            Type::ResultCStrOrFromBytesWithNulError,
+        ]],
+        (Type::Str, Type::CString) => &[&[
+            Type::Str,
+            Type::U8Slice,
+            Type::ResultCStrOrFromBytesWithNulError,
+            Type::ResultCStringOrFromBytesWithNulError,
+        ]],
+
+        // From String
+        (Type::String, Type::Str) => &[&[Type::StringRef, Type::Str]],
+        (Type::String, Type::U8Slice) => &[&[Type::StringRef, Type::U8Slice]],
+        (Type::String, Type::U8Vec) => &[&[Type::String, Type::U8Vec]],
+        (Type::String, Type::Path) => &[&[Type::StringRef, Type::Path]],
+        (Type::String, Type::PathBuf) => &[&[Type::StringRef, Type::PathBuf]],
+        (Type::String, Type::OsStr) => &[&[Type::StringRef, Type::OsStr]],
+        (Type::String, Type::OsString) => &[&[Type::String, Type::OsString]],
+        (Type::String, Type::CStr) => &[&[
+            Type::StringRef,
+            Type::U8Slice,
+            Type::ResultCStrOrFromBytesWithNulError,
+        ]],
+        (Type::String, Type::CString) => &[&[
+            Type::StringRef,
+            Type::U8Slice,
+            Type::ResultCStrOrFromBytesWithNulError,
+            Type::ResultCStringOrFromBytesWithNulError,
+        ]],
+
+        // From &[u8]
+        (Type::U8Slice, Type::Str) => {
+            &[&[Type::U8Slice, Type::ResultStrOrUtf8Error]]
+        }
+        (Type::U8Slice, Type::String) => &[
+            &[Type::U8Slice, Type::ResultStringOrFromUtf8Error],
+            &[Type::U8Slice, Type::CowStr],
+        ],
+        (Type::U8Slice, Type::U8Vec) => &[&[Type::U8Slice, Type::U8Vec]],
+        (Type::U8Slice, Type::Path) => {
+            &[&[Type::U8Slice, Type::OsStr, Type::Path]]
+        }
+        (Type::U8Slice, Type::PathBuf) => {
+            &[&[Type::U8Slice, Type::OsStr, Type::PathBuf]]
+        }
+        (Type::U8Slice, Type::OsStr) => &[&[Type::U8Slice, Type::OsStr]],
+        (Type::U8Slice, Type::OsString) => {
+            &[&[Type::U8Slice, Type::U8Vec, Type::OsString]]
+        }
+        (Type::U8Slice, Type::CStr) => {
+            &[&[Type::U8Slice, Type::ResultCStrOrFromBytesWithNulError]]
+        }
+        (Type::U8Slice, Type::CString) => &[&[
+            Type::U8Slice,
+            Type::ResultCStrOrFromBytesWithNulError,
+            Type::ResultCStringOrFromBytesWithNulError,
+        ]],
+
+        // From Vec<u8>
+        (Type::U8Vec, Type::Str) => {
+            &[&[Type::U8VecRef, Type::ResultStrOrUtf8Error]]
+        }
+        (Type::U8Vec, Type::String) => {
+            &[&[Type::U8Vec, Type::ResultStringOrFromUtf8Error]]
+        }
+        (Type::U8Vec, Type::U8Slice) => &[&[Type::U8VecRef, Type::U8Slice]],
+        (Type::U8Vec, Type::Path) => {
+            &[&[Type::U8VecRef, Type::OsStr, Type::Path]]
+        }
+        (Type::U8Vec, Type::PathBuf) => {
+            &[&[Type::U8Vec, Type::OsString, Type::PathBuf]]
+        }
+        (Type::U8Vec, Type::OsStr) => &[&[Type::U8VecRef, Type::OsStr]],
+        (Type::U8Vec, Type::OsString) => &[&[Type::U8Vec, Type::OsString]],
+        (Type::U8Vec, Type::CStr) => {
+            &[&[Type::U8VecRef, Type::ResultCStrOrFromBytesWithNulError]]
+        }
+        (Type::U8Vec, Type::CString) => &[&[
+            Type::U8VecRef,
+            Type::ResultCStrOrFromBytesWithNulError,
+            Type::ResultCStringOrFromBytesWithNulError,
+        ]],
+
+        // From &Path
+        (Type::Path, Type::Str) => &[&[Type::Path, Type::OptionStr]],
+        (Type::Path, Type::String) => &[&[Type::Path, Type::OptionString]],
+        (Type::Path, Type::U8Slice) => {
+            &[&[Type::Path, Type::OsStr, Type::U8Slice]]
+        }
+        (Type::Path, Type::U8Vec) => {
+            &[&[Type::Path, Type::OsStr, Type::U8Slice, Type::U8Vec]]
+        }
+        (Type::Path, Type::PathBuf) => &[&[Type::Path, Type::PathBuf]],
+        (Type::Path, Type::OsStr) => &[&[Type::Path, Type::OsStr]],
+        (Type::Path, Type::OsString) => {
+            &[&[Type::Path, Type::OsStr, Type::OsString]]
+        }
+        (Type::Path, Type::CStr) => &[&[
+            Type::Path,
+            Type::OsStr,
+            Type::U8Slice,
+            Type::ResultCStrOrFromBytesWithNulError,
+        ]],
+        (Type::Path, Type::CString) => &[&[
+            Type::Path,
+            Type::OsStr,
+            Type::U8Slice,
+            Type::ResultCStrOrFromBytesWithNulError,
+            Type::ResultCStringOrFromBytesWithNulError,
+        ]],
+
+        // From PathBuf
+        (Type::PathBuf, Type::Str) => {
+            &[&[Type::PathBufRef, Type::Path, Type::OptionStr]]
+        }
+        (Type::PathBuf, Type::String) => {
+            &[&[Type::PathBuf, Type::Path, Type::OptionString]]
+        }
+        (Type::PathBuf, Type::U8Slice) => {
+            &[&[Type::PathBufRef, Type::OsStr, Type::U8Slice]]
+        }
+        (Type::PathBuf, Type::U8Vec) => {
+            &[&[Type::PathBuf, Type::OsString, Type::U8Vec]]
+        }
+        (Type::PathBuf, Type::Path) => &[&[Type::PathBufRef, Type::Path]],
+        (Type::PathBuf, Type::OsStr) => &[&[Type::PathBufRef, Type::OsStr]],
+        (Type::PathBuf, Type::OsString) => &[&[Type::PathBuf, Type::OsString]],
+        (Type::PathBuf, Type::CStr) => &[&[
+            Type::PathBufRef,
+            Type::OsStr,
+            Type::U8Slice,
+            Type::ResultCStrOrFromBytesWithNulError,
+        ]],
+        (Type::PathBuf, Type::CString) => &[&[
+            Type::PathBufRef,
+            Type::OsStr,
+            Type::U8Slice,
+            Type::ResultCStrOrFromBytesWithNulError,
+            Type::ResultCStringOrFromBytesWithNulError,
+        ]],
+
+        // From &OsStr
+        (Type::OsStr, Type::Str) => &[&[Type::OsStr, Type::OptionStr]],
+        (Type::OsStr, Type::String) => &[&[Type::OsStr, Type::OptionString]],
+        (Type::OsStr, Type::U8Slice) => &[&[Type::OsStr, Type::U8Slice]],
+        (Type::OsStr, Type::U8Vec) => {
+            &[&[Type::OsStr, Type::U8Slice, Type::U8Vec]]
+        }
+        (Type::OsStr, Type::Path) => &[&[Type::OsStr, Type::Path]],
+        (Type::OsStr, Type::PathBuf) => &[&[Type::OsStr, Type::PathBuf]],
+        (Type::OsStr, Type::OsString) => &[&[Type::OsStr, Type::OsString]],
+        (Type::OsStr, Type::CStr) => &[&[
+            Type::OsStr,
+            Type::U8Slice,
+            Type::ResultCStrOrFromBytesWithNulError,
+        ]],
+        (Type::OsStr, Type::CString) => &[&[
+            Type::OsStr,
+            Type::U8Slice,
+            Type::ResultCStrOrFromBytesWithNulError,
+            Type::ResultCStringOrFromBytesWithNulError,
+        ]],
+
+        // From OsString
+        (Type::OsString, Type::Str) => &[&[Type::OsStringRef, Type::OptionStr]],
+        (Type::OsString, Type::String) => {
+            &[&[Type::OsString, Type::ResultStringOrOsString]]
+        }
+        (Type::OsString, Type::U8Slice) => {
+            &[&[Type::OsStringRef, Type::U8Slice]]
+        }
+        (Type::OsString, Type::U8Vec) => &[&[Type::OsString, Type::U8Vec]],
+        (Type::OsString, Type::Path) => &[&[Type::OsStringRef, Type::Path]],
+        (Type::OsString, Type::PathBuf) => &[&[Type::OsString, Type::PathBuf]],
+        (Type::OsString, Type::OsStr) => &[&[Type::OsStringRef, Type::OsStr]],
+        (Type::OsString, Type::CStr) => &[&[
+            Type::OsStringRef,
+            Type::U8Slice,
+            Type::ResultCStrOrFromBytesWithNulError,
+        ]],
+        (Type::OsString, Type::CString) => &[&[
+            Type::OsStringRef,
+            Type::U8Slice,
+            Type::ResultCStrOrFromBytesWithNulError,
+            Type::ResultCStringOrFromBytesWithNulError,
+        ]],
+
+        // From &CStr
+        (Type::CStr, Type::Str) => &[&[Type::CStr, Type::ResultStrOrUtf8Error]],
+        (Type::CStr, Type::String) => &[&[
+            Type::CStr,
+            Type::ResultStrOrUtf8Error,
+            Type::ResultStringOrUtf8Error,
+        ]],
+        // TODO: add lossy string conversion
+        (Type::CStr, Type::U8Slice) => &[&[Type::CStr, Type::U8Slice]],
+        (Type::CStr, Type::U8Vec) => {
+            &[&[Type::CStr, Type::U8Slice, Type::U8Vec]]
+        }
+        (Type::CStr, Type::Path) => {
+            &[&[Type::CStr, Type::U8Slice, Type::OsStr, Type::Path]]
+        }
+        (Type::CStr, Type::PathBuf) => &[&[
+            Type::CStr,
+            Type::U8Slice,
+            Type::OsStr,
+            Type::Path,
+            Type::PathBuf,
+        ]],
+        (Type::CStr, Type::OsStr) => {
+            &[&[Type::CStr, Type::U8Slice, Type::OsStr]]
+        }
+        (Type::CStr, Type::OsString) => {
+            &[&[Type::CStr, Type::U8Slice, Type::OsStr, Type::OsString]]
+        }
+        (Type::CStr, Type::CString) => &[&[Type::CStr, Type::CString]],
+
+        // From CString
+        (Type::CString, Type::Str) => {
+            &[&[Type::CStringRef, Type::CStr, Type::ResultStrOrUtf8Error]]
+        }
+        (Type::CString, Type::String) => {
+            &[&[Type::CString, Type::ResultStringOrIntoStringError]]
+        }
+        // TODO: comment about nul termination variant
+        (Type::CString, Type::U8Slice) => &[&[Type::CStringRef, Type::U8Slice]],
+        // TODO: comment about nul termination variant
+        (Type::CString, Type::U8Vec) => &[&[Type::CString, Type::U8Vec]],
+        (Type::CString, Type::Path) => {
+            &[&[Type::CStringRef, Type::U8Slice, Type::OsStr, Type::Path]]
+        }
+        (Type::CString, Type::PathBuf) => {
+            &[&[Type::CString, Type::U8Vec, Type::OsString, Type::PathBuf]]
+        }
+        (Type::CString, Type::OsStr) => {
+            &[&[Type::CStringRef, Type::U8Slice, Type::OsStr]]
+        }
+        (Type::CString, Type::OsString) => {
+            &[&[Type::CString, Type::U8Vec, Type::OsString]]
+        }
+        (Type::CString, Type::CStr) => &[&[Type::CStringRef, Type::CStr]],
+
+        _ => panic!("invalid conversion chain: {:?} -> {:?}", t1, t2),
     }
 }
 
@@ -474,10 +568,23 @@ fn direct_conversion(t1: Type, t2: Type) -> Conversion {
         (Type::CStr, Type::ResultStrOrUtf8Error) => mkconv("{}.to_str()"),
         // TODO: add comment about the with nul option
         (Type::CStr, Type::U8Slice) => mkconv("{}.to_bytes()"),
+        (Type::CStr, Type::CString) => mkconv("CString::from({})"),
+
+        // From CString
+        (Type::CStringRef, Type::CStr) => mkconv("{}.as_c_str()"),
+        (Type::CString, Type::ResultStringOrIntoStringError) => {
+            mkconv("{}.into_string()")
+        }
+        (Type::CStringRef, Type::U8Slice) => mkconv("{}.as_bytes()"),
+        (Type::CString, Type::U8Vec) => mkconv("{}.into_bytes()"),
 
         (Type::ResultStrOrUtf8Error, Type::ResultStringOrUtf8Error) => {
             mkconv("{}.map(|s| s.to_string())")
         }
+        (
+            Type::ResultCStrOrFromBytesWithNulError,
+            Type::ResultCStringOrFromBytesWithNulError,
+        ) => mkconv("{}.map(CString::from)"),
 
         _ => panic!("invalid direct conversion: {:?} -> {:?}", t1, t2),
     }
