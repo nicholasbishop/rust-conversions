@@ -856,7 +856,7 @@ fn gen_html_content(gen: &[(Type, PathBuf)]) -> String {
         let highlighted = highlighter.highlight(&code);
 
         out.push_str(&format!(
-            "<a name={}><h2>{}</h2></a>",
+            "<a name={}><h2>From {}</h2></a>",
             t1.short_name(),
             t1.html_type_str(),
         ));
@@ -869,7 +869,7 @@ fn gen_html_nav() -> String {
     let mut nav = "<ul>".to_string();
     for a in Type::anchors() {
         nav += &format!(
-            "<li><a href=\"#{}\">{}</a></li>",
+            "<li><a href=\"#{}\">From {}</a></li>",
             a.short_name(),
             a.html_type_str()
         );
