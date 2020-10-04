@@ -590,19 +590,38 @@ fn direct_conversion(t1: Type, t2: Type) -> Conversion {
     }
 }
 
+struct Comment(Vec<String>);
+
+impl Comment {
+    fn new() -> Comment {
+        Comment(Vec::new())
+    }
+
+    fn add_paragraph(&mut self, s: &str) {
+        // Rewrap the input. The source string may be broken across
+        // multiple lines, so first replace any newlines with a
+        // space. Then collapse any double spaces.
+        let line = s.replace('\n', " ").replace("  ", " ");
+        let wrapped = textwrap::fill(&line, 72);
+
+        self.0.push(wrapped);
+    }
+
+    fn format(&self) -> String {
+        let all = self.0.join("\n\n");
+
+        let mut out = String::new();
+        for line in all.lines() {
+            out.push_str(&format!("// {}\n", line));
+        }
+        out
+    }
+}
+
 #[derive(Default)]
 struct Code {
     uses: BTreeSet<&'static str>,
     functions: String,
-}
-
-impl Code {
-    fn add_comment(&mut self, comment: &str) {
-        let wrapped = textwrap::fill(&comment.replace('\n', " "), 74);
-        for line in wrapped.lines() {
-            self.functions.push_str(&format!("// {}\n", line));
-        }
-    }
 }
 
 impl Code {
@@ -660,14 +679,17 @@ fn gen_one_conversion(
         expr
     );
 
+    let mut comment = Comment::new();
+
     if unix_only {
-        code.add_comment("This conversion is only allowed on Unix.");
+        comment.add_paragraph("This conversion is only allowed on Unix.");
     }
 
-    if let Some(comment) = output_type.return_comment() {
-        code.add_comment(comment);
+    if let Some(para) = output_type.return_comment() {
+        comment.add_paragraph(para);
     }
 
+    code.functions.push_str(&comment.format());
     code.functions.push_str(&func);
     code.functions.push_str("\n\n");
 }
