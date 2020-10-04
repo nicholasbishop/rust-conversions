@@ -6,4 +6,4 @@ types in Rust. For example, how to convert from a `CStr` to a
 
 Rendered view: https://nicholasbishop.github.io/rust-conversions
 
-To build locally, run cargo run.
+To build locally, run `cargo run`.
