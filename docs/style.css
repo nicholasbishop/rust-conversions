@@ -98,21 +98,16 @@ a:active, a:hover {
     }
 }
 
-pre {
+pre, code {
     background-color: rgb(243, 246, 250);
     border: solid 1px;
     border-color: rgb(220, 230, 240);
     border-radius: 0.3rem;
+}
+
+pre {
     font-size: 0.9rem;
     line-height: 1.45;
     padding: 0.8rem;
     overflow: auto;
-}
-
-code {
-    background-color: rgb(243, 246, 250);
-    border: solid 1px;
-    border-color: rgb(220, 230, 240);
-    border-radius: 0.3rem;
-    font-size: 0.9rem;
 }

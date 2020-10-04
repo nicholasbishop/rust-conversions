@@ -18,7 +18,7 @@
     </div>
     <div id="nav">
       <div id="nav-inner">
-        <ul><li><a href="#str">From &str</a></li><li><a href="#string">From String</a></li><li><a href="#u8_slice">From &[u8]</a></li><li><a href="#u8_vec">From Vec&lt;u8&gt;</a></li><li><a href="#path">From &Path</a></li><li><a href="#path_buf">From PathBuf</a></li><li><a href="#os_str">From &OsStr</a></li><li><a href="#os_string">From OsString</a></li><li><a href="#c_str">From &CStr</a></li><li><a href="#c_string">From CString</a></li></ul>
+        <ul><li><a href="#str">From <code>&str</code></a></li><li><a href="#string">From <code>String</code></a></li><li><a href="#u8_slice">From <code>&[u8]</code></a></li><li><a href="#u8_vec">From <code>Vec&lt;u8&gt;</code></a></li><li><a href="#path">From <code>&Path</code></a></li><li><a href="#path_buf">From <code>PathBuf</code></a></li><li><a href="#os_str">From <code>&OsStr</code></a></li><li><a href="#os_string">From <code>OsString</code></a></li><li><a href="#c_str">From <code>&CStr</code></a></li><li><a href="#c_string">From <code>CString</code></a></li></ul>
       </div>
     </div>
     <div id="content">
@@ -36,7 +36,7 @@
       the <a href="https://github.com/nicholasbishop/rust-conversions">GitHub
       repo</a>.</p>
 
-      <a name=str><h2>From &str</h2></a><pre style="background-color:#f3f6fa;">
+      <a name=str><h2>From <code>&str</code></h2></a><pre style="background-color:#f3f6fa;">
 <span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
@@ -82,7 +82,7 @@
 </span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
 </span><span style="color:#323232;">}
 </span></pre>
-<a name=string><h2>From String</h2></a><pre style="background-color:#f3f6fa;">
+<a name=string><h2>From <code>String</code></h2></a><pre style="background-color:#f3f6fa;">
 <span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
@@ -130,7 +130,7 @@
 </span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
 </span><span style="color:#323232;">}
 </span></pre>
-<a name=u8_slice><h2>From &[u8]</h2></a><pre style="background-color:#f3f6fa;">
+<a name=u8_slice><h2>From <code>&[u8]</code></h2></a><pre style="background-color:#f3f6fa;">
 <span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::borrow::Cow;
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
@@ -194,7 +194,7 @@
 </span><span style="color:#323232;">    CStr::from_bytes_with_nul(input).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
 </span><span style="color:#323232;">}
 </span></pre>
-<a name=u8_vec><h2>From Vec&lt;u8&gt;</h2></a><pre style="background-color:#f3f6fa;">
+<a name=u8_vec><h2>From <code>Vec&lt;u8&gt;</code></h2></a><pre style="background-color:#f3f6fa;">
 <span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
@@ -252,7 +252,7 @@
 </span><span style="color:#323232;">    CStr::from_bytes_with_nul(input).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
 </span><span style="color:#323232;">}
 </span></pre>
-<a name=path><h2>From &Path</h2></a><pre style="background-color:#f3f6fa;">
+<a name=path><h2>From <code>&Path</code></h2></a><pre style="background-color:#f3f6fa;">
 <span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
@@ -310,7 +310,7 @@
 </span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_os_str</span><span style="color:#323232;">().</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
 </span><span style="color:#323232;">}
 </span></pre>
-<a name=path_buf><h2>From PathBuf</h2></a><pre style="background-color:#f3f6fa;">
+<a name=path_buf><h2>From <code>PathBuf</code></h2></a><pre style="background-color:#f3f6fa;">
 <span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
@@ -369,7 +369,7 @@
 </span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_os_str</span><span style="color:#323232;">().</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
 </span><span style="color:#323232;">}
 </span></pre>
-<a name=os_str><h2>From &OsStr</h2></a><pre style="background-color:#f3f6fa;">
+<a name=os_str><h2>From <code>&OsStr</code></h2></a><pre style="background-color:#f3f6fa;">
 <span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
@@ -427,7 +427,7 @@
 </span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
 </span><span style="color:#323232;">}
 </span></pre>
-<a name=os_string><h2>From OsString</h2></a><pre style="background-color:#f3f6fa;">
+<a name=os_string><h2>From <code>OsString</code></h2></a><pre style="background-color:#f3f6fa;">
 <span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
@@ -485,7 +485,7 @@
 </span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
 </span><span style="color:#323232;">}
 </span></pre>
-<a name=c_str><h2>From &CStr</h2></a><pre style="background-color:#f3f6fa;">
+<a name=c_str><h2>From <code>&CStr</code></h2></a><pre style="background-color:#f3f6fa;">
 <span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::os::unix::ffi::OsStrExt;
@@ -532,7 +532,7 @@
 </span><span style="color:#323232;">    CString::from(input)
 </span><span style="color:#323232;">}
 </span></pre>
-<a name=c_string><h2>From CString</h2></a><pre style="background-color:#f3f6fa;">
+<a name=c_string><h2>From <code>CString</code></h2></a><pre style="background-color:#f3f6fa;">
 <span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::IntoStringError;
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
