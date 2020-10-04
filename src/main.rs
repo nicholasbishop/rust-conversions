@@ -608,8 +608,10 @@ impl Comment {
     }
 
     fn format(&self) -> String {
+        // Join the paragraphs together with a blank line in between
         let all = self.0.join("\n\n");
 
+        // Add "// " to the beginning of each line
         let mut out = String::new();
         for line in all.lines() {
             out.push_str(&format!("// {}\n", line));
