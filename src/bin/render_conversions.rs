@@ -640,6 +640,7 @@ impl Code {
         let combos = &[
             ("std::ffi", "CStr", "CString"),
             ("std::ffi", "OsStr", "OsString"),
+            ("std::os::unix::ffi", "OsStrExt", "OsStringExt"),
             ("std::path", "Path", "PathBuf"),
         ];
 

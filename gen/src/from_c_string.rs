@@ -1,8 +1,7 @@
 use std::ffi::IntoStringError;
 use std::ffi::{CStr, CString};
 use std::ffi::{OsStr, OsString};
-use std::os::unix::ffi::OsStrExt;
-use std::os::unix::ffi::OsStringExt;
+use std::os::unix::ffi::{OsStrExt, OsStringExt};
 use std::path::{Path, PathBuf};
 use std::str::Utf8Error;
 
