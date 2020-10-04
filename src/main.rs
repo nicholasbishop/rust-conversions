@@ -627,11 +627,40 @@ struct Code {
 }
 
 impl Code {
+    /// Combine some use lines together for brevity.
+    fn combine_uses(&self) -> BTreeSet<String> {
+        let combos = &[
+            ("std::ffi", "CStr", "CString"),
+            ("std::ffi", "OsStr", "OsString"),
+            ("std::path", "Path", "PathBuf"),
+        ];
+
+        // Make a copy of `uses` with `String` instead of `&str`
+        let mut uses = self
+            .uses
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<BTreeSet<_>>();
+
+        for (pre, a, b) in combos {
+            let full_a = format!("{}::{}", pre, a);
+            let full_b = format!("{}::{}", pre, b);
+            if uses.contains(&full_a) && uses.contains(&full_b) {
+                uses.remove(&full_a);
+                uses.remove(&full_b);
+                uses.insert(format!("{}::{{{}, {}}}", pre, a, b));
+            }
+        }
+
+        uses
+    }
+
     fn gen(&self) -> String {
+        let uses = self.combine_uses();
+
         format!(
             "{}\n\n{}",
-            self.uses
-                .iter()
+            uses.iter()
                 .map(|s| format!("use {};", s))
                 .collect::<Vec<_>>()
                 .join("\n"),
