@@ -1,9 +1,13 @@
 use anyhow::Error;
+use askama::Template;
 use command_run::Command;
 use fehler::throws;
 use std::collections::BTreeSet;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use syntect::highlighting::{Color, Theme, ThemeSet};
+use syntect::html::highlighted_html_for_string;
+use syntect::parsing::{SyntaxReference, SyntaxSet};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Type {
@@ -97,6 +101,10 @@ impl Type {
                 "Result<String, IntoStringError>"
             }
         }
+    }
+
+    fn html_type_str(&self) -> String {
+        self.type_str().replace("<", "&lt;").replace(">", "&gt;")
     }
 
     fn short_name(&self) -> &'static str {
@@ -766,17 +774,23 @@ fn gen_lib_code(mod_names: &[String]) -> String {
     )
 }
 
+/// Generate the Rust files, format them, run clippy, and build.
+///
+/// Returns a vec mapping from the type being converted from to the
+/// path of the generated Rust file.
 #[throws]
-fn main() {
+fn gen_and_build_sources() -> Vec<(Type, PathBuf)> {
     let gen_path = Path::new("gen/src");
     let mut mods = Vec::new();
+    let mut out = Vec::new();
 
     for t1 in Type::anchors() {
         let mod_name = format!("from_{}", t1.short_name());
         mods.push(mod_name.clone());
 
         let path = gen_path.join(format!("{}.rs", mod_name));
-        fs::write(path, gen_code(*t1).gen())?;
+        fs::write(&path, gen_code(*t1).gen())?;
+        out.push((*t1, path));
     }
 
     fs::write(gen_path.join("lib.rs"), gen_lib_code(&mods))?;
@@ -784,4 +798,93 @@ fn main() {
     run_cargo_cmd("fmt")?;
     run_cargo_cmd("clippy")?;
     run_cargo_cmd("build")?;
+
+    out
+}
+
+#[derive(Template)]
+#[template(path = "index.html", escape = "none")]
+struct IndexTemplate {
+    nav: String,
+    content: String,
+}
+
+impl IndexTemplate {
+    #[throws]
+    fn write(&self, path: &Path) {
+        fs::write(path, self.render()?)?;
+    }
+}
+
+struct Highlighter {
+    ss: SyntaxSet,
+    // TODO
+    syntax: SyntaxReference,
+    theme: Theme,
+}
+
+impl Highlighter {
+    fn new() -> Highlighter {
+        let ss = SyntaxSet::load_defaults_newlines();
+        let ts = ThemeSet::load_defaults();
+        let mut theme = ts.themes["InspiredGitHub"].clone();
+
+        theme.settings.background = Some(Color {
+            r: 243,
+            g: 246,
+            b: 250,
+            a: 255,
+        });
+
+        let syntax = ss.find_syntax_by_extension("rs").unwrap().clone();
+
+        Highlighter { ss, syntax, theme }
+    }
+
+    fn highlight(&self, code: &str) -> String {
+        highlighted_html_for_string(code, &self.ss, &self.syntax, &self.theme)
+    }
+}
+
+#[throws]
+fn gen_html_content(gen: &[(Type, PathBuf)]) -> String {
+    let mut out = String::new();
+    let highlighter = Highlighter::new();
+
+    for (t1, path) in gen {
+        let code = fs::read_to_string(path)?;
+        let highlighted = highlighter.highlight(&code);
+
+        out.push_str(&format!(
+            "<a name={}><h2>{}</h2></a>",
+            t1.short_name(),
+            t1.html_type_str(),
+        ));
+        out.push_str(&highlighted);
+    }
+    out
+}
+
+fn gen_html_nav() -> String {
+    let mut nav = "<ul>".to_string();
+    for a in Type::anchors() {
+        nav += &format!(
+            "<li><a href=\"#{}\">{}</a></li>",
+            a.short_name(),
+            a.html_type_str()
+        );
+    }
+    nav += "</ul>";
+    nav
+}
+
+#[throws]
+fn main() {
+    let gen = gen_and_build_sources()?;
+
+    IndexTemplate {
+        nav: gen_html_nav(),
+        content: gen_html_content(&gen)?,
+    }
+    .write(Path::new("docs/index.html"))?;
 }

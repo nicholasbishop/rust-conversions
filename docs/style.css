@@ -1,0 +1,110 @@
+/* Style based on the Github Jekyll Cayman theme */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    color: #606c71;
+    font-size: 17.6px;
+    margin: 0;
+}
+
+h1 {
+    margin: 12px;
+}
+
+h2 {
+    color: #159957;
+    font-weight: normal;
+	margin-top: 2rem;
+	margin-bottom: 1rem;
+}
+
+li {
+    padding-bottom: 10px;
+}
+
+.active {
+    font-weight: bold;
+}
+
+a {
+    color: #1e6bb8;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+a:active, a:hover {
+    outline: 0;
+}
+
+#repo-link {
+    color: white;
+}
+
+#header {
+    background-color: #159957;
+    background-image: linear-gradient(120deg, #155799, #159957);
+    color: white;
+    padding: 16px;
+    text-align: center;
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+@media print, screen and (min-width: 900px) {
+    #content {
+        margin-left: 12rem;
+        margin-right: 12rem;
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+}
+
+@media print, screen and (min-width: 520px) {
+    #nav {
+        position: fixed;
+        width: 12rem;
+    }
+
+    #nav-inner {
+        position: sticky;
+    }
+
+    #content {
+        margin-left: 12rem;
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+}
+
+@media print, screen and (max-width: 520px) {
+    #content {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+}
+
+pre {
+    background-color: rgb(243, 246, 250);
+    border: solid 1px;
+    border-color: rgb(220, 230, 240);
+    border-radius: 0.3rem;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    padding: 0.8rem;
+    overflow: auto;
+}

@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Rust Conversions</title>
+    <link rel="stylesheet" href="style.css" />
+    
+    <link rel="icon" type="image/png" href="favicon.png">
+  </head>
+
+  <body>
+    <div id="header">
+      <h1>Rust Conversions</h1>
+      <a id="repo-link"
+         href="https://github.com/nicholasbishop/rust-conversions">GitHub Repo 🔗</a>
+    </div>
+    <div id="nav">
+      <div id="nav-inner">
+        <ul><li><a href="#str">&str</a></li><li><a href="#string">String</a></li><li><a href="#u8_slice">&[u8]</a></li><li><a href="#u8_vec">Vec&lt;u8&gt;</a></li><li><a href="#path">&Path</a></li><li><a href="#path_buf">PathBuf</a></li><li><a href="#os_str">&OsStr</a></li><li><a href="#os_string">OsString</a></li><li><a href="#c_str">&CStr</a></li><li><a href="#c_string">CString</a></li></ul>
+      </div>
+    </div>
+    <div id="content">
+      <p>This is a reference for converting between various string and byte types in Rust.</p>
+
+      <a name=str><h2>&str</h2></a><pre style="background-color:#f3f6fa;">
+<span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::path::{Path, PathBuf};
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">str_to_string</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;str</span><span style="color:#323232;">) -&gt; String {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">to_string</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">str_to_u8_slice</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;str</span><span style="color:#323232;">) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">] {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">str_to_u8_vec</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;str</span><span style="color:#323232;">) -&gt; Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">().</span><span style="color:#62a35c;">to_vec</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">str_to_path</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;str</span><span style="color:#323232;">) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path {
+</span><span style="color:#323232;">    Path::new(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">str_to_path_buf</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;str</span><span style="color:#323232;">) -&gt; PathBuf {
+</span><span style="color:#323232;">    PathBuf::from(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">str_to_os_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;str</span><span style="color:#323232;">) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr {
+</span><span style="color:#323232;">    OsStr::new(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">str_to_os_string</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;str</span><span style="color:#323232;">) -&gt; OsString {
+</span><span style="color:#323232;">    OsString::from(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// A FromBytesWithNulError will be returned if the input is not nul-
+</span><span style="font-style:italic;color:#969896;">// terminated or contains any interior nul bytes. If your input is not nul-
+</span><span style="font-style:italic;color:#969896;">// terminated then a conversion without allocation is not possible, convert
+</span><span style="font-style:italic;color:#969896;">// to a CString instead.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">str_to_c_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;str</span><span style="color:#323232;">) -&gt; Result&lt;</span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr, FromBytesWithNulError&gt; {
+</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">())
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">str_to_c_string</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;str</span><span style="color:#323232;">) -&gt; Result&lt;CString, FromBytesWithNulError&gt; {
+</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
+</span><span style="color:#323232;">}
+</span></pre>
+<a name=string><h2>String</h2></a><pre style="background-color:#f3f6fa;">
+<span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::path::{Path, PathBuf};
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">string_to_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">String) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;str </span><span style="color:#323232;">{
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_str</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">string_to_u8_slice</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">String) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">] {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">string_to_u8_vec</span><span style="color:#323232;">(input: String) -&gt; Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">into_bytes</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">string_to_path</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">String) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path {
+</span><span style="color:#323232;">    Path::new(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">string_to_path_buf</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">String) -&gt; PathBuf {
+</span><span style="color:#323232;">    PathBuf::from(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">string_to_os_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">String) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr {
+</span><span style="color:#323232;">    OsStr::new(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">string_to_os_string</span><span style="color:#323232;">(input: String) -&gt; OsString {
+</span><span style="color:#323232;">    OsString::from(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// A FromBytesWithNulError will be returned if the input is not nul-
+</span><span style="font-style:italic;color:#969896;">// terminated or contains any interior nul bytes. If your input is not nul-
+</span><span style="font-style:italic;color:#969896;">// terminated then a conversion without allocation is not possible, convert
+</span><span style="font-style:italic;color:#969896;">// to a CString instead.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">string_to_c_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">String) -&gt; Result&lt;</span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr, FromBytesWithNulError&gt; {
+</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">())
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">string_to_c_string</span><span style="color:#323232;">(
+</span><span style="color:#323232;">    input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">String,
+</span><span style="color:#323232;">) -&gt; Result&lt;CString, FromBytesWithNulError&gt; {
+</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
+</span><span style="color:#323232;">}
+</span></pre>
+<a name=u8_slice><h2>&[u8]</h2></a><pre style="background-color:#f3f6fa;">
+<span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::borrow::Cow;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::os::unix::ffi::OsStrExt;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::os::unix::ffi::OsStringExt;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::path::{Path, PathBuf};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::str::Utf8Error;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::string::FromUtf8Error;
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_slice_to_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">]) -&gt; Result&lt;</span><span style="font-weight:bold;color:#a71d5d;">&amp;str</span><span style="color:#323232;">, Utf8Error&gt; {
+</span><span style="color:#323232;">    std::str::from_utf8(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_slice_to_string</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">]) -&gt; Result&lt;String, FromUtf8Error&gt; {
+</span><span style="color:#323232;">    </span><span style="color:#0086b3;">String</span><span style="color:#323232;">::from_utf8(input.</span><span style="color:#62a35c;">to_vec</span><span style="color:#323232;">())
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This never fails, but invalid UTF-8 sequences will be replaced with &quot;�&quot;.
+</span><span style="font-style:italic;color:#969896;">// This returns a `Cow&lt;str&gt;`; call `to_string()` to convert it to a
+</span><span style="font-style:italic;color:#969896;">// `String`.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_slice_to_string_lossy</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">]) -&gt; Cow&lt;</span><span style="font-weight:bold;color:#a71d5d;">str</span><span style="color:#323232;">&gt; {
+</span><span style="color:#323232;">    </span><span style="color:#0086b3;">String</span><span style="color:#323232;">::from_utf8_lossy(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_slice_to_u8_vec</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">]) -&gt; Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">to_vec</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_slice_to_path_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">]) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path {
+</span><span style="color:#323232;">    Path::new(OsStr::from_bytes(input))
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_slice_to_path_buf_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">]) -&gt; PathBuf {
+</span><span style="color:#323232;">    PathBuf::from(OsStr::from_bytes(input))
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_slice_to_os_str_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">]) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr {
+</span><span style="color:#323232;">    OsStr::from_bytes(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_slice_to_os_string_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">]) -&gt; OsString {
+</span><span style="color:#323232;">    OsString::from_vec(input.</span><span style="color:#62a35c;">to_vec</span><span style="color:#323232;">())
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// A FromBytesWithNulError will be returned if the input is not nul-
+</span><span style="font-style:italic;color:#969896;">// terminated or contains any interior nul bytes. If your input is not nul-
+</span><span style="font-style:italic;color:#969896;">// terminated then a conversion without allocation is not possible, convert
+</span><span style="font-style:italic;color:#969896;">// to a CString instead.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_slice_to_c_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">]) -&gt; Result&lt;</span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr, FromBytesWithNulError&gt; {
+</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_slice_to_c_string</span><span style="color:#323232;">(
+</span><span style="color:#323232;">    input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">],
+</span><span style="color:#323232;">) -&gt; Result&lt;CString, FromBytesWithNulError&gt; {
+</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
+</span><span style="color:#323232;">}
+</span></pre>
+<a name=u8_vec><h2>Vec&lt;u8&gt;</h2></a><pre style="background-color:#f3f6fa;">
+<span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::os::unix::ffi::OsStrExt;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::os::unix::ffi::OsStringExt;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::path::{Path, PathBuf};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::str::Utf8Error;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::string::FromUtf8Error;
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_vec_to_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt;) -&gt; Result&lt;</span><span style="font-weight:bold;color:#a71d5d;">&amp;str</span><span style="color:#323232;">, Utf8Error&gt; {
+</span><span style="color:#323232;">    std::str::from_utf8(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_vec_to_string</span><span style="color:#323232;">(input: Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt;) -&gt; Result&lt;String, FromUtf8Error&gt; {
+</span><span style="color:#323232;">    </span><span style="color:#0086b3;">String</span><span style="color:#323232;">::from_utf8(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_vec_to_u8_slice</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt;) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">] {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_slice</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_vec_to_path_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt;) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path {
+</span><span style="color:#323232;">    Path::new(OsStr::from_bytes(input))
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_vec_to_path_buf_unix</span><span style="color:#323232;">(input: Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt;) -&gt; PathBuf {
+</span><span style="color:#323232;">    PathBuf::from(OsString::from_vec(input))
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_vec_to_os_str_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt;) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr {
+</span><span style="color:#323232;">    OsStr::from_bytes(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_vec_to_os_string_unix</span><span style="color:#323232;">(input: Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt;) -&gt; OsString {
+</span><span style="color:#323232;">    OsString::from_vec(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// A FromBytesWithNulError will be returned if the input is not nul-
+</span><span style="font-style:italic;color:#969896;">// terminated or contains any interior nul bytes. If your input is not nul-
+</span><span style="font-style:italic;color:#969896;">// terminated then a conversion without allocation is not possible, convert
+</span><span style="font-style:italic;color:#969896;">// to a CString instead.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_vec_to_c_str</span><span style="color:#323232;">(
+</span><span style="color:#323232;">    input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt;,
+</span><span style="color:#323232;">) -&gt; Result&lt;</span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr, FromBytesWithNulError&gt; {
+</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_vec_to_c_string</span><span style="color:#323232;">(
+</span><span style="color:#323232;">    input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt;,
+</span><span style="color:#323232;">) -&gt; Result&lt;CString, FromBytesWithNulError&gt; {
+</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
+</span><span style="color:#323232;">}
+</span></pre>
+<a name=path><h2>&Path</h2></a><pre style="background-color:#f3f6fa;">
+<span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::os::unix::ffi::OsStrExt;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::path::{Path, PathBuf};
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// Returns None if the input is not valid UTF-8.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_to_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path) -&gt; Option&lt;</span><span style="font-weight:bold;color:#a71d5d;">&amp;str</span><span style="color:#323232;">&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">to_str</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// Returns None if the input is not valid UTF-8.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_to_string</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path) -&gt; Option&lt;String&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">to_str</span><span style="color:#323232;">().</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(|s| s.</span><span style="color:#62a35c;">to_string</span><span style="color:#323232;">())
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_to_u8_slice_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">] {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_os_str</span><span style="color:#323232;">().</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_to_u8_vec_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path) -&gt; Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_os_str</span><span style="color:#323232;">().</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">().</span><span style="color:#62a35c;">to_vec</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_to_path_buf</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path) -&gt; PathBuf {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">to_path_buf</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_to_os_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_os_str</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_to_os_string</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path) -&gt; OsString {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_os_str</span><span style="color:#323232;">().</span><span style="color:#62a35c;">to_os_string</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-style:italic;color:#969896;">//
+</span><span style="font-style:italic;color:#969896;">// A FromBytesWithNulError will be returned if the input is not nul-
+</span><span style="font-style:italic;color:#969896;">// terminated or contains any interior nul bytes. If your input is not nul-
+</span><span style="font-style:italic;color:#969896;">// terminated then a conversion without allocation is not possible, convert
+</span><span style="font-style:italic;color:#969896;">// to a CString instead.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_to_c_str_unix</span><span style="color:#323232;">(
+</span><span style="color:#323232;">    input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path,
+</span><span style="color:#323232;">) -&gt; Result&lt;</span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr, FromBytesWithNulError&gt; {
+</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_os_str</span><span style="color:#323232;">().</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">())
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_to_c_string_unix</span><span style="color:#323232;">(
+</span><span style="color:#323232;">    input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path,
+</span><span style="color:#323232;">) -&gt; Result&lt;CString, FromBytesWithNulError&gt; {
+</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_os_str</span><span style="color:#323232;">().</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
+</span><span style="color:#323232;">}
+</span></pre>
+<a name=path_buf><h2>PathBuf</h2></a><pre style="background-color:#f3f6fa;">
+<span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::os::unix::ffi::OsStrExt;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::os::unix::ffi::OsStringExt;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::path::{Path, PathBuf};
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// Returns None if the input is not valid UTF-8.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_buf_to_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">PathBuf) -&gt; Option&lt;</span><span style="font-weight:bold;color:#a71d5d;">&amp;str</span><span style="color:#323232;">&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_path</span><span style="color:#323232;">().</span><span style="color:#62a35c;">to_str</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// Returns None if the input is not valid UTF-8.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_buf_to_string</span><span style="color:#323232;">(input: PathBuf) -&gt; Option&lt;String&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_path</span><span style="color:#323232;">().</span><span style="color:#62a35c;">to_str</span><span style="color:#323232;">().</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(|s| s.</span><span style="color:#62a35c;">to_string</span><span style="color:#323232;">())
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_buf_to_u8_slice_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">PathBuf) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">] {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_os_str</span><span style="color:#323232;">().</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_buf_to_u8_vec_unix</span><span style="color:#323232;">(input: PathBuf) -&gt; Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">into_os_string</span><span style="color:#323232;">().</span><span style="color:#62a35c;">into_vec</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_buf_to_path</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">PathBuf) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_path</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_buf_to_os_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">PathBuf) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_os_str</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_buf_to_os_string</span><span style="color:#323232;">(input: PathBuf) -&gt; OsString {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">into_os_string</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-style:italic;color:#969896;">//
+</span><span style="font-style:italic;color:#969896;">// A FromBytesWithNulError will be returned if the input is not nul-
+</span><span style="font-style:italic;color:#969896;">// terminated or contains any interior nul bytes. If your input is not nul-
+</span><span style="font-style:italic;color:#969896;">// terminated then a conversion without allocation is not possible, convert
+</span><span style="font-style:italic;color:#969896;">// to a CString instead.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_buf_to_c_str_unix</span><span style="color:#323232;">(
+</span><span style="color:#323232;">    input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">PathBuf,
+</span><span style="color:#323232;">) -&gt; Result&lt;</span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr, FromBytesWithNulError&gt; {
+</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_os_str</span><span style="color:#323232;">().</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">())
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">path_buf_to_c_string_unix</span><span style="color:#323232;">(
+</span><span style="color:#323232;">    input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">PathBuf,
+</span><span style="color:#323232;">) -&gt; Result&lt;CString, FromBytesWithNulError&gt; {
+</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_os_str</span><span style="color:#323232;">().</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
+</span><span style="color:#323232;">}
+</span></pre>
+<a name=os_str><h2>&OsStr</h2></a><pre style="background-color:#f3f6fa;">
+<span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::os::unix::ffi::OsStrExt;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::path::{Path, PathBuf};
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// Returns None if the input is not valid UTF-8.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_str_to_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr) -&gt; Option&lt;</span><span style="font-weight:bold;color:#a71d5d;">&amp;str</span><span style="color:#323232;">&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">to_str</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// Returns None if the input is not valid UTF-8.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_str_to_string</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr) -&gt; Option&lt;String&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">to_str</span><span style="color:#323232;">().</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(|s| s.</span><span style="color:#62a35c;">to_string</span><span style="color:#323232;">())
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_str_to_u8_slice_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">] {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_str_to_u8_vec_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr) -&gt; Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">().</span><span style="color:#62a35c;">to_vec</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_str_to_path</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path {
+</span><span style="color:#323232;">    Path::new(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_str_to_path_buf</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr) -&gt; PathBuf {
+</span><span style="color:#323232;">    PathBuf::from(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_str_to_os_string</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr) -&gt; OsString {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">to_os_string</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-style:italic;color:#969896;">//
+</span><span style="font-style:italic;color:#969896;">// A FromBytesWithNulError will be returned if the input is not nul-
+</span><span style="font-style:italic;color:#969896;">// terminated or contains any interior nul bytes. If your input is not nul-
+</span><span style="font-style:italic;color:#969896;">// terminated then a conversion without allocation is not possible, convert
+</span><span style="font-style:italic;color:#969896;">// to a CString instead.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_str_to_c_str_unix</span><span style="color:#323232;">(
+</span><span style="color:#323232;">    input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr,
+</span><span style="color:#323232;">) -&gt; Result&lt;</span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr, FromBytesWithNulError&gt; {
+</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">())
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_str_to_c_string_unix</span><span style="color:#323232;">(
+</span><span style="color:#323232;">    input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr,
+</span><span style="color:#323232;">) -&gt; Result&lt;CString, FromBytesWithNulError&gt; {
+</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
+</span><span style="color:#323232;">}
+</span></pre>
+<a name=os_string><h2>OsString</h2></a><pre style="background-color:#f3f6fa;">
+<span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::os::unix::ffi::OsStrExt;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::os::unix::ffi::OsStringExt;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::path::{Path, PathBuf};
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// Returns None if the input is not valid UTF-8.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_string_to_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsString) -&gt; Option&lt;</span><span style="font-weight:bold;color:#a71d5d;">&amp;str</span><span style="color:#323232;">&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">to_str</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_string_to_string</span><span style="color:#323232;">(input: OsString) -&gt; Result&lt;String, OsString&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">into_string</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_string_to_u8_slice_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsString) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">] {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_string_to_u8_vec_unix</span><span style="color:#323232;">(input: OsString) -&gt; Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">into_vec</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_string_to_path</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsString) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path {
+</span><span style="color:#323232;">    Path::new(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_string_to_path_buf</span><span style="color:#323232;">(input: OsString) -&gt; PathBuf {
+</span><span style="color:#323232;">    PathBuf::from(input)
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_string_to_os_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsString) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_os_str</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-style:italic;color:#969896;">//
+</span><span style="font-style:italic;color:#969896;">// A FromBytesWithNulError will be returned if the input is not nul-
+</span><span style="font-style:italic;color:#969896;">// terminated or contains any interior nul bytes. If your input is not nul-
+</span><span style="font-style:italic;color:#969896;">// terminated then a conversion without allocation is not possible, convert
+</span><span style="font-style:italic;color:#969896;">// to a CString instead.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_string_to_c_str_unix</span><span style="color:#323232;">(
+</span><span style="color:#323232;">    input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsString,
+</span><span style="color:#323232;">) -&gt; Result&lt;</span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr, FromBytesWithNulError&gt; {
+</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">())
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_string_to_c_string_unix</span><span style="color:#323232;">(
+</span><span style="color:#323232;">    input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsString,
+</span><span style="color:#323232;">) -&gt; Result&lt;CString, FromBytesWithNulError&gt; {
+</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
+</span><span style="color:#323232;">}
+</span></pre>
+<a name=c_str><h2>&CStr</h2></a><pre style="background-color:#f3f6fa;">
+<span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::os::unix::ffi::OsStrExt;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::path::{Path, PathBuf};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::str::Utf8Error;
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_str_to_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr) -&gt; Result&lt;</span><span style="font-weight:bold;color:#a71d5d;">&amp;str</span><span style="color:#323232;">, Utf8Error&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">to_str</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_str_to_string</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr) -&gt; Result&lt;String, Utf8Error&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">to_str</span><span style="color:#323232;">().</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(|s| s.</span><span style="color:#62a35c;">to_string</span><span style="color:#323232;">())
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_str_to_u8_slice</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">] {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">to_bytes</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_str_to_u8_vec</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr) -&gt; Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">to_bytes</span><span style="color:#323232;">().</span><span style="color:#62a35c;">to_vec</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_str_to_path_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path {
+</span><span style="color:#323232;">    Path::new(OsStr::from_bytes(input.</span><span style="color:#62a35c;">to_bytes</span><span style="color:#323232;">()))
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_str_to_path_buf_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr) -&gt; PathBuf {
+</span><span style="color:#323232;">    Path::new(OsStr::from_bytes(input.</span><span style="color:#62a35c;">to_bytes</span><span style="color:#323232;">())).</span><span style="color:#62a35c;">to_path_buf</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_str_to_os_str_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr {
+</span><span style="color:#323232;">    OsStr::from_bytes(input.</span><span style="color:#62a35c;">to_bytes</span><span style="color:#323232;">())
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_str_to_os_string_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr) -&gt; OsString {
+</span><span style="color:#323232;">    OsStr::from_bytes(input.</span><span style="color:#62a35c;">to_bytes</span><span style="color:#323232;">()).</span><span style="color:#62a35c;">to_os_string</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_str_to_c_string</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr) -&gt; CString {
+</span><span style="color:#323232;">    CString::from(input)
+</span><span style="color:#323232;">}
+</span></pre>
+<a name=c_string><h2>CString</h2></a><pre style="background-color:#f3f6fa;">
+<span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::IntoStringError;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::os::unix::ffi::OsStrExt;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::os::unix::ffi::OsStringExt;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::path::{Path, PathBuf};
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::str::Utf8Error;
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_string_to_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CString) -&gt; Result&lt;</span><span style="font-weight:bold;color:#a71d5d;">&amp;str</span><span style="color:#323232;">, Utf8Error&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_c_str</span><span style="color:#323232;">().</span><span style="color:#62a35c;">to_str</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_string_to_string</span><span style="color:#323232;">(input: CString) -&gt; Result&lt;String, IntoStringError&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">into_string</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_string_to_u8_slice</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CString) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">] {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_string_to_u8_vec</span><span style="color:#323232;">(input: CString) -&gt; Vec&lt;</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">&gt; {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">into_bytes</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_string_to_path_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CString) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">Path {
+</span><span style="color:#323232;">    Path::new(OsStr::from_bytes(input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()))
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_string_to_path_buf_unix</span><span style="color:#323232;">(input: CString) -&gt; PathBuf {
+</span><span style="color:#323232;">    PathBuf::from(OsString::from_vec(input.</span><span style="color:#62a35c;">into_bytes</span><span style="color:#323232;">()))
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_string_to_os_str_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CString) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr {
+</span><span style="color:#323232;">    OsStr::from_bytes(input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">())
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_string_to_os_string_unix</span><span style="color:#323232;">(input: CString) -&gt; OsString {
+</span><span style="color:#323232;">    OsString::from_vec(input.</span><span style="color:#62a35c;">into_bytes</span><span style="color:#323232;">())
+</span><span style="color:#323232;">}
+</span><span style="color:#323232;">
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">c_string_to_c_str</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CString) -&gt; </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">CStr {
+</span><span style="color:#323232;">    input.</span><span style="color:#62a35c;">as_c_str</span><span style="color:#323232;">()
+</span><span style="color:#323232;">}
+</span></pre>
+
+    </div>
+  </body>
+</html>
