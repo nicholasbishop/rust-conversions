@@ -22,7 +22,19 @@
       </div>
     </div>
     <div id="content">
-      <p>This is a reference for converting between various string and byte types in Rust.</p>
+      <p>This is a reference for converting between various string and
+      byte types in Rust. The types listed are in the sidebar, and
+      each section shows the conversions to all the other types.</p>
+
+      <p>These conversions are not exhaustive of course. For example,
+      if the target type can be inferred you might be able to use
+      <code>.into()</code> instead of an explicit method
+      like <code>.to_string()</code>.</p>
+
+      <p>If you spot something that could be improved please file an
+      issue or a pull request in
+      the <a href="https://github.com/nicholasbishop/rust-conversions">GitHub
+      repo</a>.</p>
 
       <a name=str><h2>From &str</h2></a><pre style="background-color:#f3f6fa;">
 <span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
