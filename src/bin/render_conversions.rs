@@ -44,6 +44,7 @@ enum Type {
     ResultStringOrOsString,
     ResultCStrOrFromBytesWithNulError,
     ResultCStringOrFromBytesWithNulError,
+    ResultCStringOrNulError,
     ResultStringOrIntoStringError,
 }
 
@@ -97,6 +98,7 @@ impl Type {
             Type::ResultCStringOrFromBytesWithNulError => {
                 "Result<CString, FromBytesWithNulError>"
             }
+            Type::ResultCStringOrNulError => "Result<CString, NulError>",
             Type::ResultStringOrIntoStringError => {
                 "Result<String, IntoStringError>"
             }
@@ -144,6 +146,9 @@ impl Type {
             Type::ResultCStringOrFromBytesWithNulError => {
                 &["std::ffi::CString", "std::ffi::FromBytesWithNulError"]
             }
+            Type::ResultCStringOrNulError => {
+                &["std::ffi::CString", "std::ffi::NulError"]
+            }
             Type::ResultStringOrIntoStringError => {
                 &["std::ffi::IntoStringError"]
             }
@@ -169,6 +174,9 @@ input is not nul-terminated or contains any interior nul bytes.
 
 If your input is not nul-terminated then a conversion without allocation
 is not possible, convert to a CString instead.",
+            ),
+            Type::ResultCStringOrNulError => Some(
+                "A NulError will be returned if the input contains any nul bytes.",
             ),
             _ => None,
         }
@@ -384,8 +392,8 @@ fn conversion_chains(t1: Type, t2: Type) -> &'static [&'static [Type]] {
         (Type::OsStr, Type::CString) => &[&[
             Type::OsStr,
             Type::U8Slice,
-            Type::ResultCStrOrFromBytesWithNulError,
-            Type::ResultCStringOrFromBytesWithNulError,
+            Type::U8Vec,
+            Type::ResultCStringOrNulError,
         ]],
 
         // From OsString
@@ -405,12 +413,9 @@ fn conversion_chains(t1: Type, t2: Type) -> &'static [&'static [Type]] {
             Type::U8Slice,
             Type::ResultCStrOrFromBytesWithNulError,
         ]],
-        (Type::OsString, Type::CString) => &[&[
-            Type::OsStringRef,
-            Type::U8Slice,
-            Type::ResultCStrOrFromBytesWithNulError,
-            Type::ResultCStringOrFromBytesWithNulError,
-        ]],
+        (Type::OsString, Type::CString) => {
+            &[&[Type::OsString, Type::U8Vec, Type::ResultCStringOrNulError]]
+        }
 
         // From &CStr
         (Type::CStr, Type::Str) => &[&[Type::CStr, Type::ResultStrOrUtf8Error]],
@@ -529,6 +534,9 @@ fn direct_conversion(t1: Type, t2: Type) -> Conversion {
         }
         (Type::U8VecRef, Type::ResultCStrOrFromBytesWithNulError) => {
             mkconv("CStr::from_bytes_with_nul({})")
+        }
+        (Type::U8Vec, Type::ResultCStringOrNulError) => {
+            mkconv("CString::new({})")
         }
 
         // From &OsStr

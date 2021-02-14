@@ -1,4 +1,5 @@
 use std::ffi::FromBytesWithNulError;
+use std::ffi::NulError;
 use std::ffi::{CStr, CString};
 use std::ffi::{OsStr, OsString};
 use std::os::unix::ffi::{OsStrExt, OsStringExt};
@@ -48,8 +49,10 @@ pub fn os_string_to_c_str_unix(
 }
 
 // This conversion is only allowed on Unix.
+//
+// A NulError will be returned if the input contains any nul bytes.
 pub fn os_string_to_c_string_unix(
-    input: &OsString,
-) -> Result<CString, FromBytesWithNulError> {
-    CStr::from_bytes_with_nul(input.as_bytes()).map(CString::from)
+    input: OsString,
+) -> Result<CString, NulError> {
+    CString::new(input.into_vec())
 }

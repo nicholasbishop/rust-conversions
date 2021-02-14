@@ -369,6 +369,7 @@
 </span></pre>
 <a name=os_str><h2>From <code>&OsStr</code></h2></a><pre style="background-color:#f3f6fa;">
 <span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::NulError;
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::os::unix::ffi::OsStrExt;
@@ -419,14 +420,15 @@
 </span><span style="color:#323232;">}
 </span><span style="color:#323232;">
 </span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
-</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_str_to_c_string_unix</span><span style="color:#323232;">(
-</span><span style="color:#323232;">    input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr,
-</span><span style="color:#323232;">) -&gt; Result&lt;CString, FromBytesWithNulError&gt; {
-</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
+</span><span style="font-style:italic;color:#969896;">//
+</span><span style="font-style:italic;color:#969896;">// A NulError will be returned if the input contains any nul bytes.
+</span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_str_to_c_string_unix</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsStr) -&gt; Result&lt;CString, NulError&gt; {
+</span><span style="color:#323232;">    CString::new(input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">().</span><span style="color:#62a35c;">to_vec</span><span style="color:#323232;">())
 </span><span style="color:#323232;">}
 </span></pre>
 <a name=os_string><h2>From <code>OsString</code></h2></a><pre style="background-color:#f3f6fa;">
 <span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::FromBytesWithNulError;
+</span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::NulError;
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{CStr, CString};
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::ffi::{OsStr, OsString};
 </span><span style="font-weight:bold;color:#a71d5d;">use </span><span style="color:#323232;">std::os::unix::ffi::{OsStrExt, OsStringExt};
@@ -476,10 +478,12 @@
 </span><span style="color:#323232;">}
 </span><span style="color:#323232;">
 </span><span style="font-style:italic;color:#969896;">// This conversion is only allowed on Unix.
+</span><span style="font-style:italic;color:#969896;">//
+</span><span style="font-style:italic;color:#969896;">// A NulError will be returned if the input contains any nul bytes.
 </span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">os_string_to_c_string_unix</span><span style="color:#323232;">(
-</span><span style="color:#323232;">    input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">OsString,
-</span><span style="color:#323232;">) -&gt; Result&lt;CString, FromBytesWithNulError&gt; {
-</span><span style="color:#323232;">    CStr::from_bytes_with_nul(input.</span><span style="color:#62a35c;">as_bytes</span><span style="color:#323232;">()).</span><span style="color:#62a35c;">map</span><span style="color:#323232;">(CString::from)
+</span><span style="color:#323232;">    input: OsString,
+</span><span style="color:#323232;">) -&gt; Result&lt;CString, NulError&gt; {
+</span><span style="color:#323232;">    CString::new(input.</span><span style="color:#62a35c;">into_vec</span><span style="color:#323232;">())
 </span><span style="color:#323232;">}
 </span></pre>
 <a name=c_str><h2>From <code>&CStr</code></h2></a><pre style="background-color:#f3f6fa;">
