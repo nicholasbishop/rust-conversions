@@ -106,7 +106,7 @@ impl Type {
     }
 
     fn html_type_str(&self) -> String {
-        self.type_str().replace("<", "&lt;").replace(">", "&gt;")
+        self.type_str().replace('<', "&lt;").replace('>', "&gt;")
     }
 
     fn short_name(&self) -> &'static str {
@@ -630,7 +630,7 @@ impl Comment {
         // Add "// " to the beginning of each line
         let mut out = String::new();
         for line in all.lines() {
-            out.push_str(&format!("// {}\n", line));
+            out = format!("{}// {}\n", out, line);
         }
         out
     }
@@ -865,11 +865,12 @@ fn gen_html_content(gen: &[(Type, PathBuf)]) -> String {
         let code = fs::read_to_string(path)?;
         let highlighted = highlighter.highlight(&code);
 
-        out.push_str(&format!(
-            "<a name={}><h2>From <code>{}</code></h2></a>",
+        out = format!(
+            "{}<a name={}><h2>From <code>{}</code></h2></a>",
+            out,
             t1.short_name(),
             t1.html_type_str(),
-        ));
+        );
         out.push_str(&highlighted);
     }
     out
@@ -878,8 +879,9 @@ fn gen_html_content(gen: &[(Type, PathBuf)]) -> String {
 fn gen_html_nav() -> String {
     let mut nav = "<ul>".to_string();
     for a in Type::anchors() {
-        nav += &format!(
-            "<li><a href=\"#{}\">From <code>{}</code></a></li>",
+        nav = format!(
+            "{}<li><a href=\"#{}\">From <code>{}</code></a></li>",
+            nav,
             a.short_name(),
             a.html_type_str()
         );
