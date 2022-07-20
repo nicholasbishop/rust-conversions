@@ -15,9 +15,9 @@ pub fn u8_slice_to_string(input: &[u8]) -> Result<String, FromUtf8Error> {
     String::from_utf8(input.to_vec())
 }
 
-// This never fails, but invalid UTF-8 sequences will be replaced with "�".
-// This returns a `Cow<str>`; call `to_string()` to convert it to a
-// `String`.
+// This never fails, but invalid UTF-8 sequences will be replaced with
+// "�". This returns a `Cow<str>`; call `to_string()` to convert it to
+// a `String`.
 pub fn u8_slice_to_string_lossy(input: &[u8]) -> Cow<str> {
     String::from_utf8_lossy(input)
 }

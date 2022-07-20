@@ -852,6 +852,7 @@ impl Highlighter {
 
     fn highlight(&self, code: &str) -> String {
         highlighted_html_for_string(code, &self.ss, &self.syntax, &self.theme)
+            .unwrap()
     }
 }
 

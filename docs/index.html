@@ -149,9 +149,9 @@
 </span><span style="color:#323232;">    </span><span style="color:#0086b3;">String</span><span style="color:#323232;">::from_utf8(input.</span><span style="color:#62a35c;">to_vec</span><span style="color:#323232;">())
 </span><span style="color:#323232;">}
 </span><span style="color:#323232;">
-</span><span style="font-style:italic;color:#969896;">// This never fails, but invalid UTF-8 sequences will be replaced with &quot;�&quot;.
-</span><span style="font-style:italic;color:#969896;">// This returns a `Cow&lt;str&gt;`; call `to_string()` to convert it to a
-</span><span style="font-style:italic;color:#969896;">// `String`.
+</span><span style="font-style:italic;color:#969896;">// This never fails, but invalid UTF-8 sequences will be replaced with
+</span><span style="font-style:italic;color:#969896;">// &quot;�&quot;. This returns a `Cow&lt;str&gt;`; call `to_string()` to convert it to
+</span><span style="font-style:italic;color:#969896;">// a `String`.
 </span><span style="font-weight:bold;color:#a71d5d;">pub fn </span><span style="font-weight:bold;color:#795da3;">u8_slice_to_string_lossy</span><span style="color:#323232;">(input: </span><span style="font-weight:bold;color:#a71d5d;">&amp;</span><span style="color:#323232;">[</span><span style="font-weight:bold;color:#a71d5d;">u8</span><span style="color:#323232;">]) -&gt; Cow&lt;</span><span style="font-weight:bold;color:#a71d5d;">str</span><span style="color:#323232;">&gt; {
 </span><span style="color:#323232;">    </span><span style="color:#0086b3;">String</span><span style="color:#323232;">::from_utf8_lossy(input)
 </span><span style="color:#323232;">}

@@ -6,8 +6,8 @@ publish = false
 
 [dependencies]
 anyhow = "1.0"
-askama = "0.10"
-command-run = "0.13"
+askama = "0.11"
+command-run = "1.1"
 fehler = "1.0"
-syntect = "4.4"
-textwrap = "0.12"
+syntect = "5.0"
+textwrap = "0.15"
