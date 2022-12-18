@@ -794,10 +794,23 @@ fn gen_and_build_sources() -> Vec<(Type, PathBuf)> {
     out
 }
 
+#[throws]
+fn get_rustc_version() -> String {
+    let output = Command::with_args("rustc", ["--version"])
+        .enable_capture()
+        .run()?;
+    let full_version = String::from_utf8(output.stdout).unwrap();
+    let version = full_version.split_whitespace().nth(1).unwrap();
+    // Validate that this looks like a version number.
+    assert!(version.starts_with("1."));
+    version.to_string()
+}
+
 #[derive(Template)]
 #[template(path = "index.html", escape = "none")]
 struct IndexTemplate {
     nav: String,
+    rust_version: String,
     content: String,
 }
 
@@ -879,6 +892,7 @@ fn main() {
 
     IndexTemplate {
         nav: gen_html_nav(),
+        rust_version: get_rustc_version()?,
         content: gen_html_content(&gen)?,
     }
     .write(Path::new("docs/index.html"))?;
