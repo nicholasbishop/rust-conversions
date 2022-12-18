@@ -44,8 +44,14 @@ a:active, a:hover {
     outline: 0;
 }
 
-#repo-link {
+#header a {
     color: white;
+    text-decoration: underline;
+}
+
+#header a:hover {
+    color: #ccccff;
+    text-decoration: underline;
 }
 
 #header {
