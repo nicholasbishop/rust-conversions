@@ -53,5 +53,5 @@ pub fn os_str_to_c_str_unix(
 //
 // A NulError will be returned if the input contains any nul bytes.
 pub fn os_str_to_c_string_unix(input: &OsStr) -> Result<CString, NulError> {
-    CString::new(input.as_bytes().to_vec())
+    CString::new(input.as_bytes())
 }
