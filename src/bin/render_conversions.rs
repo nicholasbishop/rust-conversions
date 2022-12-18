@@ -2,6 +2,7 @@ use anyhow::Error;
 use askama::Template;
 use command_run::Command;
 use fehler::throws;
+use regex::Regex;
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -852,6 +853,30 @@ impl Highlighter {
     }
 }
 
+struct DocLink {
+    url: &'static str,
+    regex: Regex,
+}
+
+impl DocLink {
+    /// Create a new `DocLink`.
+    ///
+    /// `text` is the text to search for. Remember that this takes place
+    /// after code highlighting, so the text being matched against is
+    /// HTML-formatted, not Rust-formatted. The text is used to create a
+    /// regex that ensures substrings aren't accidentally matched
+    /// (e.g. `NulError` doesn't match `FromBytesWithNulError`).
+    ///
+    /// `url` is the full URL to link to.
+    fn new(text: &'static str, url: &'static str) -> Self {
+        Self {
+            url,
+            regex: Regex::new(&format!(r"([\s:{{>;])({text})([\s;,}}<&:)])"))
+                .unwrap(),
+        }
+    }
+}
+
 #[throws]
 fn gen_html_content(gen: &[(Type, PathBuf)]) -> String {
     let mut out = String::new();
@@ -869,6 +894,61 @@ fn gen_html_content(gen: &[(Type, PathBuf)]) -> String {
         );
         out.push_str(&highlighted);
     }
+
+    let doc_links = [DocLink::new(
+        "NulError",
+        "https://doc.rust-lang.org/std/ffi/struct.NulError.html"
+    ), DocLink::new(
+        "FromBytesWithNulError",
+        "https://doc.rust-lang.org/std/ffi/struct.FromBytesWithNulError.html",
+    ), DocLink::new(
+        "CStr",
+        "https://doc.rust-lang.org/std/ffi/struct.CStr.html",
+    ), DocLink::new(
+        "CString",
+        "https://doc.rust-lang.org/std/ffi/struct.CString.html",
+    ), DocLink::new(
+        "OsStr",
+        "https://doc.rust-lang.org/std/ffi/struct.OsStr.html",
+    ), DocLink::new(
+        "OsString",
+        "https://doc.rust-lang.org/std/ffi/struct.OsString.html",
+    ), DocLink::new(
+        "Path",
+        "https://doc.rust-lang.org/std/path/struct.Path.html",
+    ), DocLink::new(
+        "PathBuf",
+        "https://doc.rust-lang.org/std/path/struct.PathBuf.html",
+    ), DocLink::new(
+        "str",
+        "https://doc.rust-lang.org/std/primitive.str.html",
+    ), DocLink::new(
+        "String",
+        "https://doc.rust-lang.org/std/string/struct.String.html",
+    ), DocLink::new(
+        "Vec",
+        "https://doc.rust-lang.org/std/vec/struct.Vec.html",
+    ), DocLink::new(
+        "OsStrExt",
+        "https://doc.rust-lang.org/std/os/unix/ffi/trait.OsStrExt.html",
+    ), DocLink::new(
+        "OsStringExt",
+        "https://doc.rust-lang.org/std/os/unix/ffi/trait.OsStringExt.html",
+    ), DocLink::new(
+        "Utf8Error",
+        "https://doc.rust-lang.org/std/str/struct.Utf8Error.html",
+    ), DocLink::new(
+        "FromUtf8Error",
+        "https://doc.rust-lang.org/std/string/struct.FromUtf8Error.html",
+    ), DocLink::new(
+        "IntoStringError",
+        "https://doc.rust-lang.org/std/ffi/struct.IntoStringError.html",
+    )];
+    for doc_link in doc_links {
+        let elem = format!(r"$1<a href={}>$2</a>$3", doc_link.url);
+        out = doc_link.regex.replace_all(&out, elem).to_string();
+    }
+
     out
 }
 
