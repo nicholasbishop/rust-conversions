@@ -6,4 +6,12 @@ types in Rust. For example, how to convert from a `CStr` to a
 
 Rendered view: https://nicholasbishop.github.io/rust-conversions
 
-To build locally, run `cargo run`.
+## Building locally
+
+```console
+cargo run
+```
+
+This will generate formatted code in the `gen` directory and check it with clippy.
+
+The rendered HTML output will be under [`docs/index.html`](docs/index.html).
