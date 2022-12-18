@@ -43,7 +43,6 @@ enum Type {
     ResultStringOrFromUtf8Error,
     ResultStringOrOsString,
     ResultCStrOrFromBytesWithNulError,
-    ResultCStringOrFromBytesWithNulError,
     ResultCStringOrNulError,
     ResultStringOrIntoStringError,
 }
@@ -95,9 +94,6 @@ impl Type {
             Type::ResultCStrOrFromBytesWithNulError => {
                 "Result<&CStr, FromBytesWithNulError>"
             }
-            Type::ResultCStringOrFromBytesWithNulError => {
-                "Result<CString, FromBytesWithNulError>"
-            }
             Type::ResultCStringOrNulError => "Result<CString, NulError>",
             Type::ResultStringOrIntoStringError => {
                 "Result<String, IntoStringError>"
@@ -142,9 +138,6 @@ impl Type {
             }
             Type::ResultCStrOrFromBytesWithNulError => {
                 &["std::ffi::CStr", "std::ffi::FromBytesWithNulError"]
-            }
-            Type::ResultCStringOrFromBytesWithNulError => {
-                &["std::ffi::CString", "std::ffi::FromBytesWithNulError"]
             }
             Type::ResultCStringOrNulError => {
                 &["std::ffi::CString", "std::ffi::NulError"]
@@ -236,12 +229,9 @@ fn conversion_chains(t1: Type, t2: Type) -> &'static [&'static [Type]] {
             Type::U8Slice,
             Type::ResultCStrOrFromBytesWithNulError,
         ]],
-        (Type::Str, Type::CString) => &[&[
-            Type::Str,
-            Type::U8Slice,
-            Type::ResultCStrOrFromBytesWithNulError,
-            Type::ResultCStringOrFromBytesWithNulError,
-        ]],
+        (Type::Str, Type::CString) => {
+            &[&[Type::Str, Type::ResultCStringOrNulError]]
+        }
 
         // From String
         (Type::String, Type::Str) => &[&[Type::StringRef, Type::Str]],
@@ -256,12 +246,9 @@ fn conversion_chains(t1: Type, t2: Type) -> &'static [&'static [Type]] {
             Type::U8Slice,
             Type::ResultCStrOrFromBytesWithNulError,
         ]],
-        (Type::String, Type::CString) => &[&[
-            Type::StringRef,
-            Type::U8Slice,
-            Type::ResultCStrOrFromBytesWithNulError,
-            Type::ResultCStringOrFromBytesWithNulError,
-        ]],
+        (Type::String, Type::CString) => {
+            &[&[Type::String, Type::ResultCStringOrNulError]]
+        }
 
         // From &[u8]
         (Type::U8Slice, Type::Str) => {
@@ -285,11 +272,9 @@ fn conversion_chains(t1: Type, t2: Type) -> &'static [&'static [Type]] {
         (Type::U8Slice, Type::CStr) => {
             &[&[Type::U8Slice, Type::ResultCStrOrFromBytesWithNulError]]
         }
-        (Type::U8Slice, Type::CString) => &[&[
-            Type::U8Slice,
-            Type::ResultCStrOrFromBytesWithNulError,
-            Type::ResultCStringOrFromBytesWithNulError,
-        ]],
+        (Type::U8Slice, Type::CString) => {
+            &[&[Type::U8Slice, Type::ResultCStringOrNulError]]
+        }
 
         // From Vec<u8>
         (Type::U8Vec, Type::Str) => {
@@ -310,11 +295,9 @@ fn conversion_chains(t1: Type, t2: Type) -> &'static [&'static [Type]] {
         (Type::U8Vec, Type::CStr) => {
             &[&[Type::U8VecRef, Type::ResultCStrOrFromBytesWithNulError]]
         }
-        (Type::U8Vec, Type::CString) => &[&[
-            Type::U8VecRef,
-            Type::ResultCStrOrFromBytesWithNulError,
-            Type::ResultCStringOrFromBytesWithNulError,
-        ]],
+        (Type::U8Vec, Type::CString) => {
+            &[&[Type::U8Vec, Type::ResultCStringOrNulError]]
+        }
 
         // From &Path
         (Type::Path, Type::Str) => &[&[Type::Path, Type::OptionStr]],
@@ -340,8 +323,7 @@ fn conversion_chains(t1: Type, t2: Type) -> &'static [&'static [Type]] {
             Type::Path,
             Type::OsStr,
             Type::U8Slice,
-            Type::ResultCStrOrFromBytesWithNulError,
-            Type::ResultCStringOrFromBytesWithNulError,
+            Type::ResultCStringOrNulError,
         ]],
 
         // From PathBuf
@@ -367,11 +349,10 @@ fn conversion_chains(t1: Type, t2: Type) -> &'static [&'static [Type]] {
             Type::ResultCStrOrFromBytesWithNulError,
         ]],
         (Type::PathBuf, Type::CString) => &[&[
-            Type::PathBufRef,
-            Type::OsStr,
-            Type::U8Slice,
-            Type::ResultCStrOrFromBytesWithNulError,
-            Type::ResultCStringOrFromBytesWithNulError,
+            Type::PathBuf,
+            Type::OsString,
+            Type::U8Vec,
+            Type::ResultCStringOrNulError,
         ]],
 
         // From &OsStr
@@ -389,12 +370,9 @@ fn conversion_chains(t1: Type, t2: Type) -> &'static [&'static [Type]] {
             Type::U8Slice,
             Type::ResultCStrOrFromBytesWithNulError,
         ]],
-        (Type::OsStr, Type::CString) => &[&[
-            Type::OsStr,
-            Type::U8Slice,
-            Type::U8Vec,
-            Type::ResultCStringOrNulError,
-        ]],
+        (Type::OsStr, Type::CString) => {
+            &[&[Type::OsStr, Type::U8Slice, Type::ResultCStringOrNulError]]
+        }
 
         // From OsString
         (Type::OsString, Type::Str) => &[&[Type::OsStringRef, Type::OptionStr]],
@@ -492,6 +470,9 @@ fn direct_conversion(t1: Type, t2: Type) -> Conversion {
         (Type::Str, Type::PathBuf) => mkconv("PathBuf::from({})"),
         (Type::Str, Type::OsStr) => mkconv("OsStr::new({})"),
         (Type::Str, Type::OsString) => mkconv("OsString::from({})"),
+        (Type::Str, Type::ResultCStringOrNulError) => {
+            mkconv("CString::new({})")
+        }
 
         // From String
         (Type::StringRef, Type::Str) => mkconv("{}.as_str()"),
@@ -501,6 +482,9 @@ fn direct_conversion(t1: Type, t2: Type) -> Conversion {
         (Type::StringRef, Type::PathBuf) => mkconv("PathBuf::from({})"),
         (Type::StringRef, Type::OsStr) => mkconv("OsStr::new({})"),
         (Type::String, Type::OsString) => mkconv("OsString::from({})"),
+        (Type::String, Type::ResultCStringOrNulError) => {
+            mkconv("CString::new({})")
+        }
 
         // From &[u8]
         (Type::U8Slice, Type::ResultStrOrUtf8Error) => {
@@ -516,6 +500,9 @@ fn direct_conversion(t1: Type, t2: Type) -> Conversion {
         }
         (Type::U8Slice, Type::ResultCStrOrFromBytesWithNulError) => {
             mkconv("CStr::from_bytes_with_nul({})")
+        }
+        (Type::U8Slice, Type::ResultCStringOrNulError) => {
+            mkconv("CString::new({})")
         }
 
         // From Vec<u8>
@@ -597,10 +584,6 @@ fn direct_conversion(t1: Type, t2: Type) -> Conversion {
         (Type::ResultStrOrUtf8Error, Type::ResultStringOrUtf8Error) => {
             mkconv("{}.map(|s| s.to_string())")
         }
-        (
-            Type::ResultCStrOrFromBytesWithNulError,
-            Type::ResultCStringOrFromBytesWithNulError,
-        ) => mkconv("{}.map(CString::from)"),
 
         _ => panic!("invalid direct conversion: {:?} -> {:?}", t1, t2),
     }

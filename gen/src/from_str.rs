@@ -1,4 +1,5 @@
 use std::ffi::FromBytesWithNulError;
+use std::ffi::NulError;
 use std::ffi::{CStr, CString};
 use std::ffi::{OsStr, OsString};
 use std::path::{Path, PathBuf};
@@ -39,6 +40,7 @@ pub fn str_to_c_str(input: &str) -> Result<&CStr, FromBytesWithNulError> {
     CStr::from_bytes_with_nul(input.as_bytes())
 }
 
-pub fn str_to_c_string(input: &str) -> Result<CString, FromBytesWithNulError> {
-    CStr::from_bytes_with_nul(input.as_bytes()).map(CString::from)
+// A NulError will be returned if the input contains any nul bytes.
+pub fn str_to_c_string(input: &str) -> Result<CString, NulError> {
+    CString::new(input)
 }

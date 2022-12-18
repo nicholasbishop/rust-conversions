@@ -1,4 +1,5 @@
 use std::ffi::FromBytesWithNulError;
+use std::ffi::NulError;
 use std::ffi::{CStr, CString};
 use std::ffi::{OsStr, OsString};
 use std::os::unix::ffi::{OsStrExt, OsStringExt};
@@ -48,8 +49,7 @@ pub fn u8_vec_to_c_str(
     CStr::from_bytes_with_nul(input)
 }
 
-pub fn u8_vec_to_c_string(
-    input: &Vec<u8>,
-) -> Result<CString, FromBytesWithNulError> {
-    CStr::from_bytes_with_nul(input).map(CString::from)
+// A NulError will be returned if the input contains any nul bytes.
+pub fn u8_vec_to_c_string(input: Vec<u8>) -> Result<CString, NulError> {
+    CString::new(input)
 }
